@@ -1,0 +1,12 @@
+{
+  "name": "poc-agent-availability",
+  "private": true,
+  "scripts": {
+    "dev": "npm run dev --prefix server & npm run dev --prefix client",
+    "install:all": "npm install --prefix server && npm install --prefix client",
+    "prepare": "husky"
+  },
+  "devDependencies": {
+    "husky": "^9.1.7"
+  }
+}

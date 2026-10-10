@@ -1,0 +1,327 @@
+@tailwind base;
+
+:root {
+  --bg: #f4efe6;
+  --ink: #1c2a24;
+  --muted: #5c6b64;
+  --card: #fffdf8;
+  --line: #e4d9c8;
+  --teal: #0f6e62;
+  --teal-dark: #0b544b;
+  --accent: #c45c26;
+  --danger: #9b2c2c;
+  --ok: #2f6f4e;
+  --shadow: 0 10px 30px rgba(28, 42, 36, 0.08);
+  font-family: "Segoe UI", system-ui, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  min-height: 100%;
+  background: var(--bg);
+  color: var(--ink);
+}
+
+a {
+  color: var(--teal);
+  text-decoration: none;
+}
+
+.shell {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  background: var(--card);
+  border-bottom: 1px solid var(--line);
+  position: sticky;
+  top: 0;
+  z-index: 5;
+}
+
+.brand {
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+.nav a,
+.nav button.linkish {
+  color: var(--ink);
+  font-size: 0.95rem;
+}
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 16px;
+  box-shadow: var(--shadow);
+}
+
+h1,
+h2,
+h3 {
+  margin: 0 0 12px;
+}
+
+.grid {
+  display: grid;
+  gap: 14px;
+}
+
+.two-col > * {
+  min-width: 0;
+}
+
+.agents {
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 720px) {
+  .agents {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .two-col {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.agent-card img,
+.gallery img {
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+  border-radius: 12px;
+  background: #ddd4c4;
+}
+
+.meta {
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+.badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 8px 0;
+}
+
+.badge {
+  background: #e7f3ef;
+  color: var(--teal-dark);
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 0.8rem;
+}
+
+.row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+input,
+select,
+textarea,
+button {
+  font: inherit;
+}
+
+input,
+select,
+textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: white;
+}
+
+label {
+  display: block;
+  font-size: 0.85rem;
+  margin-bottom: 6px;
+  color: var(--muted);
+}
+
+.field {
+  margin-bottom: 12px;
+}
+
+button,
+.button {
+  background: var(--teal);
+  color: white;
+  border: 0;
+  border-radius: 10px;
+  padding: 10px 14px;
+  cursor: pointer;
+}
+
+button.secondary {
+  background: #dfe8e4;
+  color: var(--ink);
+}
+
+button.danger {
+  background: var(--danger);
+}
+
+button.linkish {
+  background: none;
+  color: var(--teal);
+  padding: 0;
+}
+
+.chips {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+}
+
+.chip {
+  border: 1px solid var(--line);
+  background: white;
+  color: var(--ink);
+  white-space: nowrap;
+}
+
+.chip.active {
+  background: var(--teal);
+  color: white;
+  border-color: var(--teal);
+}
+
+.error {
+  color: var(--danger);
+  margin: 8px 0;
+}
+
+.login-wrap {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+}
+
+.login-card {
+  width: min(420px, 100%);
+}
+
+.stats {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 800px) {
+  .stats {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.92rem;
+}
+
+th,
+td {
+  text-align: left;
+  padding: 8px 6px;
+  border-bottom: 1px solid var(--line);
+  vertical-align: top;
+}
+
+.placeholder {
+  height: 180px;
+  border-radius: 12px;
+  background: repeating-linear-gradient(135deg, #eee5d6, #eee5d6 10px, #e4d9c8 10px, #e4d9c8 20px);
+}
+
+.gallery {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+
+.muted {
+  color: var(--muted);
+}
+
+.menu-toggle {
+  display: none;
+}
+
+.users-table-scroll {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: auto;
+}
+
+.users-table {
+  min-width: 540px;
+}
+
+@media (max-width: 640px) {
+  .topbar {
+    flex-wrap: wrap;
+  }
+
+  .menu-toggle {
+    display: inline-flex;
+  }
+
+  .nav {
+    display: none;
+    flex: 0 0 100%;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0;
+    padding-top: 6px;
+  }
+
+  .nav.nav-open {
+    display: flex;
+  }
+
+  .nav a,
+  .nav button.linkish {
+    width: 100%;
+    padding: 10px 0;
+    border-top: 1px solid var(--line);
+    text-align: left;
+  }
+
+  .nav .muted {
+    padding: 10px 0;
+  }
+}
+
+@tailwind components;
+@tailwind utilities;
