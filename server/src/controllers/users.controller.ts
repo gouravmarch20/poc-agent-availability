@@ -1,7 +1,14 @@
 import bcrypt from 'bcryptjs';
 import type { FilterQuery } from 'mongoose';
 import { UserRecord, UserRole } from '../models/User.js';
-import { createUser, findUserById, listUsers, saveUser } from '../repositories/users.repository.js';
+import {
+  countUsers,
+  createUser,
+  findUserById,
+  hardDeleteUser,
+  listUsers,
+  saveUser,
+} from '../repositories/users.repository.js';
 import { hasErrorCode } from '../utils/errors.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 
@@ -65,6 +72,10 @@ export const update = asyncHandler(async (request, response) => {
   }
 
   const payload = request.body;
+  if (payload.isActive === false && String(user._id) === String(request.user._id)) {
+    response.status(409).json({ error: 'You cannot soft-delete your own account' });
+    return;
+  }
   const nextRole: UserRole = payload.role ?? user.role;
   const blocked = managementError(request.user.role, nextRole, user.role);
   if (blocked) {
@@ -87,4 +98,26 @@ export const update = asyncHandler(async (request, response) => {
     if (!hasErrorCode(error, 11000)) throw error;
     response.status(409).json({ error: 'Email already exists' });
   }
+});
+
+export const hardDelete = asyncHandler(async (request, response) => {
+  const user = await findUserById(request.params.id);
+  if (!user) {
+    response.status(404).json({ error: 'User not found' });
+    return;
+  }
+  if (String(user._id) === String(request.user._id)) {
+    response.status(409).json({ error: 'You cannot permanently delete your own account' });
+    return;
+  }
+  if (user.role === 'superAdmin' && user.isActive) {
+    const activeSuperAdmins = await countUsers({ role: 'superAdmin', isActive: true });
+    if (activeSuperAdmins <= 1) {
+      response.status(409).json({ error: 'The last active super-admin cannot be deleted' });
+      return;
+    }
+  }
+
+  await hardDeleteUser(String(user._id));
+  response.json({ ok: true });
 });

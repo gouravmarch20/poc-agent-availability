@@ -1,6 +1,7 @@
-import { ABSOLUTE_SESSION_MS, IDLE_MS } from '../config.js';
+import { ACCESS_EXPIRY_MESSAGE, ABSOLUTE_SESSION_MS, IDLE_MS } from '../config.js';
 import { findUserById } from '../repositories/users.repository.js';
 import type { NextFunction, Request, RequestHandler, Response } from 'express';
+import { isAccountAccessExpired } from '../utils/dates.js';
 
 export async function requireAuth(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
@@ -33,6 +34,13 @@ export async function requireAuth(req: Request, res: Response, next: NextFunctio
       await new Promise<void>((resolve) => req.session.destroy(() => resolve()));
       res.clearCookie('sid');
       res.status(401).json({ error: 'Account unavailable' });
+      return;
+    }
+
+    if (isAccountAccessExpired(user.createdAt)) {
+      await new Promise<void>((resolve) => req.session.destroy(() => resolve()));
+      res.clearCookie('sid');
+      res.status(401).json({ error: ACCESS_EXPIRY_MESSAGE });
       return;
     }
 

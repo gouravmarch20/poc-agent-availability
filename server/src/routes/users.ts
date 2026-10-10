@@ -29,5 +29,6 @@ const searchSchema = z.object({
 router.get('/', parseQuery(searchSchema), usersController.list);
 router.post('/', parseBody(createSchema), usersController.create);
 router.patch('/:id', parseBody(updateSchema), usersController.update);
+router.delete('/:id', requireRole('superAdmin'), usersController.hardDelete);
 
 export default router;

@@ -12,8 +12,11 @@ export function getAgent(id: string | undefined, signal?: AbortSignal) {
   return api(`/api/agents/${id}`, { signal, responseSchema: AgentResponseSchema });
 }
 
-export function createAgent(payload: AgentPayload) {
-  return api('/api/agents', { method: 'POST', json: payload, responseSchema: AgentResponseSchema });
+export function createAgent(payload: AgentPayload, photos: File[]) {
+  const formData = new FormData();
+  formData.append('agent', JSON.stringify(payload));
+  photos.forEach((photo) => formData.append('images', photo));
+  return api('/api/agents', { method: 'POST', formData, responseSchema: AgentResponseSchema });
 }
 
 export function updateAgent(id: string, payload: AgentPayload) {

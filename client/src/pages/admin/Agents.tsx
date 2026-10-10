@@ -1,8 +1,12 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import * as agentsApi from '../../services/agents';
 import { useApiRequest } from '../../hooks/useApiRequest';
 import { EmptyState, ErrorMessage, LoadingState } from '../../components/Feedback';
 import { Agent } from '../../types';
+import { ApiError } from '../../api';
+import MoreMenu from '../../components/MoreMenu';
+import { Button, Input } from '../../components/Controls';
+import styles from './Agents.module.css';
 
 const empty = {
   name: '',
@@ -12,13 +16,73 @@ const empty = {
   amount: 0,
   currency: 'INR',
 };
+const MAX_AGENT_IMAGES = 10;
+const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
+const ACCEPTED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+
+interface NewAgentPhoto {
+  file: File;
+  preview: string;
+}
 
 export default function Agents() {
   const [agents, setAgents] = useState<Agent[]>([]);
   const [form, setForm] = useState(empty);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [newPhotos, setNewPhotos] = useState<NewAgentPhoto[]>([]);
   const [editing, setEditing] = useState<string | null>(null);
-  const { execute, error } = useApiRequest();
+  const [deletingAgentId, setDeletingAgentId] = useState<string | null>(null);
+  const deletePending = useRef(false);
+  const newPhotoUrls = useRef<string[]>([]);
+  const { execute, error, clearError } = useApiRequest();
   const [loading, setLoading] = useState(true);
+  const editingAgent = agents.find((agent) => agent.id === editing);
+
+  useEffect(() => () => newPhotoUrls.current.forEach((url) => URL.revokeObjectURL(url)), []);
+
+  function clearNewPhotos() {
+    newPhotoUrls.current.forEach((url) => URL.revokeObjectURL(url));
+    newPhotoUrls.current = [];
+    setNewPhotos([]);
+  }
+
+  function selectNewPhotos(fileList: FileList | null) {
+    clearNewPhotos();
+    const files = Array.from(fileList ?? []).slice(0, MAX_AGENT_IMAGES);
+    const previews = files.map((file) => ({ file, preview: URL.createObjectURL(file) }));
+    newPhotoUrls.current = previews.map((photo) => photo.preview);
+    setNewPhotos(previews);
+    const error = fileList && fileList.length > MAX_AGENT_IMAGES
+      ? `Choose no more than ${MAX_AGENT_IMAGES} photos.`
+      : validatePhotoFiles(files);
+    setFieldErrors((current) => {
+      const next = { ...current };
+      if (error) next.photos = error;
+      else delete next.photos;
+      return next;
+    });
+    clearError();
+  }
+
+  function validatePhotoFiles(files: File[], existingCount = 0): string | null {
+    if (existingCount + files.length > MAX_AGENT_IMAGES) return `An agent can have up to ${MAX_AGENT_IMAGES} photos.`;
+    if (files.some((file) => !ACCEPTED_IMAGE_TYPES.includes(file.type))) return 'Use JPEG, PNG or WebP photos.';
+    if (files.some((file) => file.size > MAX_IMAGE_BYTES)) return 'Each photo must be 5 MB or smaller.';
+    return null;
+  }
+
+  function removeNewPhoto(index: number) {
+    const photo = newPhotos[index];
+    if (!photo) return;
+    URL.revokeObjectURL(photo.preview);
+    newPhotoUrls.current = newPhotoUrls.current.filter((url) => url !== photo.preview);
+    setNewPhotos((current) => current.filter((_, currentIndex) => currentIndex !== index));
+    setFieldErrors((current) => {
+      const next = { ...current };
+      delete next.photos;
+      return next;
+    });
+  }
 
   async function load() {
     const data = await execute(() => agentsApi.listAgents());
@@ -38,9 +102,9 @@ export default function Agents() {
 
   function payload() {
     return {
-      name: form.name,
-      phone: form.phone,
-      address: form.address,
+      name: form.name.trim(),
+      phone: form.phone.trim(),
+      address: form.address.trim(),
       badges: form.badges
         .split(',')
         .map((s) => s.trim())
@@ -49,46 +113,128 @@ export default function Agents() {
     };
   }
 
+  function updateField(field: keyof typeof empty, value: string | number) {
+    setForm((current) => ({ ...current, [field]: value }));
+    setFieldErrors((current) => {
+      const next = { ...current };
+      delete next[field];
+      return next;
+    });
+    clearError();
+  }
+
+  function validateForm() {
+    const nextErrors: Record<string, string> = {};
+    const badges = payload().badges;
+
+    if (!form.name.trim()) nextErrors.name = 'Enter an agent name.';
+    else if (form.name.trim().length > 80) nextErrors.name = 'Name must be 80 characters or fewer.';
+    if (form.phone.trim().length < 5) nextErrors.phone = 'Enter a phone number with at least 5 characters.';
+    else if (form.phone.trim().length > 20) nextErrors.phone = 'Phone must be 20 characters or fewer.';
+    if (form.address.length > 300) nextErrors.address = 'Address must be 300 characters or fewer.';
+    if (badges.length > 20) nextErrors.badges = 'Enter no more than 20 badges.';
+    else if (badges.some((badge) => badge.length > 40)) nextErrors.badges = 'Each badge must be 40 characters or fewer.';
+    if (!Number.isFinite(form.amount) || form.amount < 0) nextErrors.amount = 'Amount must be zero or greater.';
+    if (form.currency && (form.currency.length < 3 || form.currency.length > 6)) {
+      nextErrors.currency = 'Currency must be 3 to 6 characters.';
+    }
+    if (!editing && newPhotos.length === 0) nextErrors.photos = 'Add at least one photo for the new agent.';
+    const photoError = validatePhotoFiles(newPhotos.map((photo) => photo.file));
+    if (!editing && photoError) nextErrors.photos = photoError;
+    if (editing && editingAgent?.images.length === 0) {
+      nextErrors.photos = 'Add at least one photo before saving this agent.';
+    }
+
+    return nextErrors;
+  }
+
   async function save(e) {
     e.preventDefault();
+    const localErrors = validateForm();
+    setFieldErrors(localErrors);
+    if (Object.keys(localErrors).length > 0) return;
+
     try {
       if (editing) {
         await execute(() => agentsApi.updateAgent(editing, payload()));
       } else {
-        await execute(() => agentsApi.createAgent(payload()));
+        await execute(() => agentsApi.createAgent(payload(), newPhotos.map((photo) => photo.file)));
       }
+      clearNewPhotos();
       setForm(empty);
+      setFieldErrors({});
       setEditing(null);
       await load();
-    } catch {
+    } catch (cause) {
+      if (cause instanceof ApiError && cause.details.length > 0) {
+        const nextErrors: Record<string, string> = {};
+        cause.details.forEach(({ path, message }) => {
+          const field = path.startsWith('pricing.amount')
+            ? 'amount'
+            : path.startsWith('pricing.currency')
+              ? 'currency'
+              : path.startsWith('badges')
+                ? 'badges'
+                : path;
+          if (['name', 'phone', 'address', 'badges', 'amount', 'currency'].includes(field)) {
+            nextErrors[field] ??= message;
+          }
+        });
+        setFieldErrors(nextErrors);
+      }
       return;
     }
   }
 
-  async function remove(id) {
-    if (!confirm('Soft-delete this agent?')) return;
+  async function remove(agent: Agent) {
+    if (deletePending.current) return;
+    deletePending.current = true;
+    setDeletingAgentId(agent.id);
     try {
-      await execute(() => agentsApi.deleteAgent(id));
+      await execute(() => agentsApi.deleteAgent(agent.id));
+      if (editing === agent.id) {
+        setEditing(null);
+        setForm(empty);
+        setFieldErrors({});
+      }
       await load();
     } catch {
       return;
+    } finally {
+      deletePending.current = false;
+      setDeletingAgentId(null);
     }
   }
 
-  async function upload(agentId, files) {
+  async function upload(agentId: string, fileList: FileList) {
+    const agent = agents.find((item) => item.id === agentId);
+    const files = Array.from(fileList ?? []);
+    const photoError = validatePhotoFiles(files, agent?.images.length ?? 0);
+    if (photoError) {
+      setFieldErrors((current) => ({ ...current, photos: photoError }));
+      return;
+    }
+
     const fd = new FormData();
-    [...files].forEach((f) => fd.append('images', f));
+    files.forEach((file) => fd.append('images', file));
     try {
       await execute(() => agentsApi.uploadAgentImages(agentId, fd));
+      setFieldErrors((current) => {
+        const next = { ...current };
+        delete next.photos;
+        return next;
+      });
       await load();
-    } catch {
+    } catch (cause) {
+      if (cause instanceof ApiError) setFieldErrors((current) => ({ ...current, photos: cause.message }));
       return;
     }
   }
 
-  async function deleteImage(agent, fileId) {
+  async function deleteImage(agent: Agent, image: Agent['images'][number]) {
+    if (agent.images.length <= 1) return;
     try {
-      await execute(() => agentsApi.deleteAgentImage(agent.id, fileId));
+      await execute(() => agentsApi.deleteAgentImage(agent.id, image.fileId));
       await load();
     } catch {
       return;
@@ -110,72 +256,145 @@ export default function Agents() {
   }
 
   return (
-    <div className="grid two-col">
-      <form className="card" onSubmit={save}>
-        <h2>{editing ? 'Update agent' : 'New agent'}</h2>
-        {error && <ErrorMessage message={error} />}
-        <div className="field">
-          <label>Name</label>
-          <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
+    <div className="grid grid-cols-1 gap-3.5 min-[720px]:grid-cols-2">
+      <form className="card" onSubmit={save} noValidate>
+        <h2>{editingAgent ? `Edit ${editingAgent.name}` : 'New agent'}</h2>
+        {error && Object.keys(fieldErrors).length === 0 && <ErrorMessage message={error} />}
+        <div className={`field${fieldErrors.name ? ' has-error' : ''}`}>
+          <Input id="agent-name" label="Name" error={fieldErrors.name} value={form.name} onChange={(e) => updateField('name', e.target.value)} required maxLength={80} />
         </div>
-        <div className="field">
-          <label>Phone</label>
-          <input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} required />
+        <div className={`field${fieldErrors.phone ? ' has-error' : ''}`}>
+          <Input id="agent-phone" label="Phone" error={fieldErrors.phone} type="tel" inputMode="tel" value={form.phone} onChange={(e) => updateField('phone', e.target.value)} required minLength={5} maxLength={20} />
         </div>
-        <div className="field">
-          <label>Address</label>
-          <input value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} />
+        <div className={`field${fieldErrors.address ? ' has-error' : ''}`}>
+          <Input id="agent-address" label="Address" error={fieldErrors.address} value={form.address} onChange={(e) => updateField('address', e.target.value)} maxLength={300} />
         </div>
-        <div className="field">
-          <label>Badges (comma separated)</label>
-          <input value={form.badges} onChange={(e) => setForm({ ...form, badges: e.target.value })} />
+        <div className={`field${fieldErrors.badges ? ' has-error' : ''}`}>
+          <Input id="agent-badges" label="Badges (comma separated)" error={fieldErrors.badges} value={form.badges} onChange={(e) => updateField('badges', e.target.value)} />
         </div>
         <div className="row">
-          <div className="field" style={{ flex: 1 }}>
-            <label>Amount</label>
-            <input
+          <div className={`field${fieldErrors.amount ? ' has-error' : ''}`} style={{ flex: 1 }}>
+            <Input
+              id="agent-amount"
+              label="Amount"
+              error={fieldErrors.amount}
               type="number"
               min="0"
               value={form.amount}
-              onChange={(e) => setForm({ ...form, amount: Number(e.target.value) })}
+              onChange={(e) => updateField('amount', Number(e.target.value))}
               required
             />
           </div>
-          <div className="field" style={{ width: 100 }}>
-            <label>Currency</label>
-            <input value={form.currency} onChange={(e) => setForm({ ...form, currency: e.target.value })} />
+          <div className={`field${fieldErrors.currency ? ' has-error' : ''}`} style={{ width: 100 }}>
+            <Input id="agent-currency" label="Currency" error={fieldErrors.currency} value={form.currency} onChange={(e) => updateField('currency', e.target.value)} minLength={3} maxLength={6} />
           </div>
         </div>
-        <button type="submit">{editing ? 'Save' : 'Create'}</button>
-        {editing && (
-          <button
-            type="button"
-            className="secondary"
-            onClick={() => {
-              setEditing(null);
-              setForm(empty);
-            }}
-          >
-            Cancel
-          </button>
+        {editingAgent ? (
+          <section className={styles.photoEditor} aria-labelledby="agent-photo-editor-heading">
+            <div className={styles.photoEditorHeading}>
+              <h3 id="agent-photo-editor-heading">Photos</h3>
+              <span>{editingAgent.images.length}/{MAX_AGENT_IMAGES}</span>
+            </div>
+            {fieldErrors.photos && <p className="field-error" role="alert">{fieldErrors.photos}</p>}
+            {editingAgent.images.length > 0 ? (
+              <div className="agent-edit-photo-grid">
+                {editingAgent.images.map((image) => (
+                  <div key={image.fileId} className={`${styles.editPhoto}${image.isCover ? ` ${styles.cover}` : ''}`}>
+                    <div className={styles.editPhotoFrame}>
+                      <img src={image.url} alt={`${editingAgent.name} photo`} />
+                      {image.isCover && <span className={styles.coverBadge}><span aria-hidden="true">✓</span> Cover</span>}
+                    </div>
+                    <div className={styles.editPhotoActions}>
+                      {!image.isCover && (
+                        <Button type="button" variant="secondary" className={styles.setCover} onClick={() => setCover(editingAgent, image.fileId)}>
+                          Set as cover
+                        </Button>
+                      )}
+                      <MoreMenu
+                        label={`Delete photo from ${editingAgent.name}`}
+                        subject={`${editingAgent.name}'s photo`}
+                        confirmation="Are you sure you want to delete this photo?"
+                        onConfirm={() => { void deleteImage(editingAgent, image); }}
+                        disabled={editingAgent.images.length === 1}
+                        buttonClassName={styles.photoDeleteTrigger}
+                        buttonText="Delete"
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="meta">Add at least one photo before saving this agent.</p>
+            )}
+            <label className={`button ${styles.photoPicker}`}>
+              Add photos
+              <Input type="file" accept="image/jpeg,image/png,image/webp" multiple hidden disabled={editingAgent.images.length >= MAX_AGENT_IMAGES} onChange={(event) => { if (event.target.files?.length) void upload(editingAgent.id, event.target.files); event.target.value = ''; }} />
+            </label>
+          </section>
+        ) : (
+          <div className={`field${fieldErrors.photos ? ' has-error' : ''}`}>
+            <label htmlFor="new-agent-photos">Photos <span className={styles.photoRequired}>Required · at least 1</span></label>
+            <label className={`button ${styles.photoPicker}`}>
+              Choose photos
+              <Input id="new-agent-photos" type="file" accept="image/jpeg,image/png,image/webp" multiple hidden onChange={(event) => { selectNewPhotos(event.target.files); event.target.value = ''; }} aria-invalid={Boolean(fieldErrors.photos)} aria-describedby={fieldErrors.photos ? 'new-agent-photos-error' : undefined} />
+            </label>
+            <p className={`meta ${styles.photoHint}`}>JPEG, PNG or WebP · up to {MAX_AGENT_IMAGES} photos · 5 MB each</p>
+            {fieldErrors.photos && <p className="field-error" id="new-agent-photos-error">{fieldErrors.photos}</p>}
+            {newPhotos.length > 0 && (
+              <div className={styles.newPhotoGrid}>
+                {newPhotos.map((photo, index) => (
+                  <div key={`${photo.file.name}-${photo.file.lastModified}`} className={styles.newPhotoPreview}>
+                    <img src={photo.preview} alt={`Selected ${photo.file.name}`} />
+                    <span title={photo.file.name}>{photo.file.name}</span>
+                    <Button type="button" variant="linkish" aria-label={`Remove ${photo.file.name}`} onClick={() => removeNewPhoto(index)}>Remove</Button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         )}
+        <div className={styles.formActions}>
+          <Button type="submit">{editing ? 'Save' : 'Create'}</Button>
+          {editing && (
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => {
+                setEditing(null);
+                clearNewPhotos();
+                setForm(empty);
+                setFieldErrors({});
+                clearError();
+              }}
+            >
+              Cancel
+            </Button>
+          )}
+        </div>
       </form>
       <div>
         {loading ? <LoadingState label="Loading agents..." /> : agents.length === 0 ? (
           <EmptyState message="No agents found." />
         ) : agents.map((agent) => (
-          <div key={agent.id} className="card" style={{ marginBottom: 12 }}>
-            <h3>{agent.name}</h3>
+          <div key={agent.id} className={`card mb-3 ${styles.adminCard}${editing === agent.id ? ` ${styles.editing}` : ''}`}>
+            <div className={styles.adminCardHeading}>
+              <h3>{agent.name}</h3>
+              {editing === agent.id && <span className={styles.editingIndicator}>Selected</span>}
+            </div>
             <p className="meta">
               {agent.phone} · {agent.pricing.currency} {agent.pricing.amount}
             </p>
             <p className="meta">{agent.images.length}/10 images</p>
-            <div className="row">
-              <button
+            <div className={`row ${styles.adminActions}`}>
+              <Button
                 type="button"
-                className="secondary"
+                className={`${styles.selectTrigger}${editing === agent.id ? ` ${styles.selected}` : ''}`}
+                aria-pressed={editing === agent.id}
                 onClick={() => {
                   setEditing(agent.id);
+                  clearNewPhotos();
+                  setFieldErrors({});
+                  clearError();
                   setForm({
                     name: agent.name,
                     phone: agent.phone,
@@ -186,39 +405,16 @@ export default function Agents() {
                   });
                 }}
               >
-                Edit
-              </button>
-              <button type="button" className="danger" onClick={() => remove(agent.id)}>
-                Delete
-              </button>
-              <label className="button" style={{ display: 'inline-block' }}>
-                Photos
-                <input
-                  type="file"
-                  accept="image/jpeg,image/png,image/webp"
-                  multiple
-                  hidden
-                  onChange={(e) => {
-                    if (e.target.files?.length) upload(agent.id, e.target.files);
-                    e.target.value = '';
-                  }}
-                />
-              </label>
-            </div>
-            <div className="gallery" style={{ marginTop: 10 }}>
-              {agent.images.map((img) => (
-                <div key={img.fileId}>
-                  <img src={img.url} alt="" />
-                  <div className="row">
-                    <button type="button" className="linkish" onClick={() => setCover(agent, img.fileId)}>
-                      {img.isCover ? 'Cover' : 'Set cover'}
-                    </button>
-                    <button type="button" className="linkish" onClick={() => deleteImage(agent, img.fileId)}>
-                      Remove
-                    </button>
-                  </div>
-                </div>
-              ))}
+                {editing === agent.id ? 'Selected' : 'Select'}
+              </Button>
+              <MoreMenu
+                label={`Delete ${agent.name}`}
+                subject={agent.name}
+                confirmation="They will no longer appear to customers."
+                onConfirm={() => { void remove(agent); }}
+                disabled={deletingAgentId !== null}
+                buttonText={deletingAgentId === agent.id ? 'Deleting…' : 'Delete'}
+              />
             </div>
           </div>
         ))}

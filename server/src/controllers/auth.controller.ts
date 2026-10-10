@@ -1,10 +1,10 @@
 import bcrypt from 'bcryptjs';
 import type { Request } from 'express';
-import { LOGIN_HISTORY_DAYS, MAX_LOGINS_PER_DAY } from '../config.js';
+import { ACCESS_EXPIRY_MESSAGE, LOGIN_HISTORY_DAYS, MAX_LOGINS_PER_DAY } from '../config.js';
 import { createAnalyticsEvent } from '../repositories/analytics.repository.js';
 import { recordSuccessfulLogin } from '../repositories/auth.repository.js';
 import { findUserByEmail, saveUser } from '../repositories/users.repository.js';
-import { todayYmd } from '../utils/dates.js';
+import { isAccountAccessExpired, todayYmd } from '../utils/dates.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 
 function regenerateSession(request: Request): Promise<void> {
@@ -27,8 +27,14 @@ export const login = asyncHandler(async (request, response) => {
     return;
   }
 
+  if (isAccountAccessExpired(user.createdAt)) {
+    response.status(403).json({ error: ACCESS_EXPIRY_MESSAGE });
+    return;
+  }
+
   const expiresAt = new Date(Date.now() + LOGIN_HISTORY_DAYS * 24 * 60 * 60 * 1000);
-  const loginAllowed = await recordSuccessfulLogin(user._id, todayYmd(), expiresAt);
+  const enforceLoginLimit = user.role !== 'admin' && user.role !== 'superAdmin';
+  const loginAllowed = await recordSuccessfulLogin(user._id, todayYmd(), expiresAt, enforceLoginLimit);
   if (!loginAllowed) {
     response.status(403).json({ error: `Login limit reached (${MAX_LOGINS_PER_DAY} per day)` });
     return;

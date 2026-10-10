@@ -1,0 +1,10 @@
+set -eu
+
+echo "Running frontend lint..."
+npm --prefix client run lint
+
+echo "Running frontend type check..."
+npm --prefix client run type-check
+
+echo "Running backend type check..."
+npm --prefix server run type-check

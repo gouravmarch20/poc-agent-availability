@@ -71,6 +71,8 @@ a {
 }
 
 .card {
+  position: relative;
+  overflow: visible;
   background: var(--card);
   border: 1px solid var(--line);
   border-radius: 16px;
@@ -84,29 +86,6 @@ h3 {
   margin: 0 0 12px;
 }
 
-.grid {
-  display: grid;
-  gap: 14px;
-}
-
-.two-col > * {
-  min-width: 0;
-}
-
-.agents {
-  grid-template-columns: 1fr;
-}
-
-@media (min-width: 720px) {
-  .agents {
-    grid-template-columns: repeat(2, 1fr);
-  }
-  .two-col {
-    grid-template-columns: 1fr 1fr;
-  }
-}
-
-.agent-card img,
 .gallery img {
   width: 100%;
   height: 180px;
@@ -159,6 +138,87 @@ textarea {
   background: white;
 }
 
+.ui-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ui-button:focus-visible {
+  outline: 2px solid var(--teal);
+  outline-offset: 2px;
+}
+
+.ui-select {
+  appearance: none;
+  min-height: 48px;
+  padding: 10px 42px 10px 14px;
+  border-color: #c8d8d0;
+  border-radius: 9px;
+  background-color: #fff;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16' fill='none'%3E%3Cpath d='m4 6 4 4 4-4' stroke='%230f6e62' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  box-shadow: 0 1px 2px rgba(28, 42, 36, 0.06);
+  cursor: pointer;
+  transition: border-color 140ms ease, box-shadow 140ms ease, background-color 140ms ease;
+}
+
+.ui-date-input,
+.ui-time-input {
+  min-height: 48px;
+  padding: 10px 13px;
+  border-color: #c8d8d0;
+  border-radius: 9px;
+  background-color: #fff;
+  color: var(--ink);
+  color-scheme: light;
+  font-variant-numeric: tabular-nums;
+  box-shadow: 0 1px 2px rgba(28, 42, 36, 0.06);
+  transition: border-color 140ms ease, box-shadow 140ms ease, background-color 140ms ease;
+}
+
+.ui-date-input::-webkit-calendar-picker-indicator,
+.ui-time-input::-webkit-calendar-picker-indicator {
+  width: 28px;
+  height: 28px;
+  padding: 6px;
+  margin-left: 6px;
+  border-radius: 7px;
+  background-color: #e7f3ef;
+  cursor: pointer;
+  transition: background-color 140ms ease;
+}
+
+.ui-date-input::-webkit-calendar-picker-indicator:hover,
+.ui-time-input::-webkit-calendar-picker-indicator:hover {
+  background-color: #d5e9df;
+}
+
+.ui-select:hover,
+.ui-date-input:hover,
+.ui-time-input:hover {
+  border-color: var(--teal);
+  background-color: #fcfefd;
+}
+
+.ui-select:focus-visible,
+.ui-date-input:focus-visible,
+.ui-time-input:focus-visible {
+  border-color: var(--teal);
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(15, 110, 98, 0.15), 0 2px 5px rgba(28, 42, 36, 0.08);
+}
+
+.ui-select:disabled,
+.ui-date-input:disabled,
+.ui-time-input:disabled {
+  cursor: not-allowed;
+  background-color: #f1f4f2;
+  color: #78847e;
+  opacity: 0.75;
+}
+
 label {
   display: block;
   font-size: 0.85rem;
@@ -168,6 +228,26 @@ label {
 
 .field {
   margin-bottom: 12px;
+}
+
+.field.has-error input,
+.field.has-error select,
+.field.has-error textarea {
+  border-color: #b42318;
+  background: #fffafa;
+}
+
+.field.has-error input:focus,
+.field.has-error select:focus,
+.field.has-error textarea:focus {
+  outline: 2px solid rgba(180, 35, 24, 0.18);
+}
+
+.field-error {
+  margin: 5px 0 0;
+  color: #b42318;
+  font-size: 0.82rem;
+  line-height: 1.35;
 }
 
 button,
@@ -215,6 +295,54 @@ button.linkish {
   border-color: var(--teal);
 }
 
+.date-chip {
+  display: flex;
+  min-width: 86px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: 8px 12px;
+}
+
+.date-chip small {
+  color: var(--muted);
+  font-size: 0.72rem;
+}
+
+.date-chip.active small {
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.customer-date-options {
+  display: grid;
+  width: 100%;
+  max-width: 720px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  overflow: visible;
+  padding-bottom: 0;
+}
+
+.customer-date-options .date-chip {
+  width: 100%;
+  min-width: 0;
+  min-height: 82px;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 12px 8px;
+  border-radius: 12px;
+  font-size: 1rem;
+}
+
+.customer-date-options .date-chip span {
+  font-weight: 700;
+}
+
+.customer-date-options .date-chip small {
+  font-size: 0.8rem;
+}
+
 .error {
   color: var(--danger);
   margin: 8px 0;
@@ -229,6 +357,27 @@ button.linkish {
 
 .login-card {
   width: min(420px, 100%);
+}
+
+.signin-content {
+  animation: signin-enter 420ms ease-out both;
+}
+
+@keyframes signin-enter {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .signin-content {
+    animation: none;
+  }
 }
 
 .stats {
@@ -271,21 +420,6 @@ td {
 
 .muted {
   color: var(--muted);
-}
-
-.menu-toggle {
-  display: none;
-}
-
-.users-table-scroll {
-  width: 100%;
-  max-width: 100%;
-  min-width: 0;
-  overflow-x: auto;
-}
-
-.users-table {
-  min-width: 540px;
 }
 
 @media (max-width: 640px) {

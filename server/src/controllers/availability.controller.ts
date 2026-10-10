@@ -26,13 +26,22 @@ export const list = asyncHandler(async (request, response) => {
     return;
   }
 
+  if (request.user.role === 'customer') {
+    const earliestDate = addDaysYmd(todayYmd(), -1);
+    const latestDate = addDaysYmd(todayYmd(), 1);
+    if (from < earliestDate || to > latestDate) {
+      response.status(403).json({ error: 'Customers can view availability from yesterday through tomorrow.' });
+      return;
+    }
+  }
+
   const slots = await listAvailability(from, to);
   const agentIds = [...new Set(slots.map((slot) => String(slot.agentId)))];
   const agents = await findActiveAgentsByIds(agentIds);
   const agentsById = new Map(agents.map((agent) => [String(agent._id), agent]));
   const items = slots.flatMap((slot) => {
     const agent = agentsById.get(String(slot.agentId));
-    if (!agent) return [];
+    if (!agent || (request.user.role === 'customer' && agent.images.length === 0)) return [];
     return [{
       ...slot.toJSON(),
       agent: {
@@ -49,11 +58,14 @@ export const list = asyncHandler(async (request, response) => {
   response.json({ from, to, items });
 });
 
-export const upcoming = asyncHandler(async (_request, response) => {
+export const upcoming = asyncHandler(async (request, response) => {
   const from = todayYmd();
   const to = addDaysYmd(from, 14);
   const slots = await listAvailability(from, to);
-  const dates = [...new Set(slots.map((slot) => slot.date))];
+  const availableDates = [...new Set(slots.map((slot) => slot.date))];
+  const dates = request.user.role === 'customer'
+    ? availableDates.filter((date) => date >= addDaysYmd(from, -1) && date <= addDaysYmd(from, 1))
+    : availableDates;
   response.json({ from, to, dates });
 });
 

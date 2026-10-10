@@ -1,0 +1,62 @@
+.scheduleCard:global(.card) {
+  min-width: 0;
+  overflow-x: auto;
+}
+
+.scheduleCount {
+  padding: 4px 9px;
+  border-radius: 999px;
+  background: #e7f3ef;
+  color: var(--teal-dark);
+  font-size: 0.78rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.table {
+  min-width: 560px;
+}
+
+.table th:first-child {
+  width: 22%;
+}
+
+.table th:last-child {
+  width: 105px;
+}
+
+.table td {
+  vertical-align: middle;
+}
+
+.hoursEditor {
+  display: flex;
+  max-width: 390px;
+  align-items: center;
+  gap: 8px;
+}
+
+.hoursEditor > span {
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.inlineTime:global(.ui-time-input) {
+  width: auto;
+  min-width: 0;
+  min-height: 42px;
+  flex: 1;
+  padding: 8px 9px;
+  font-size: 0.88rem;
+}
+
+@media (max-width: 600px) {
+  .hoursEditor {
+    gap: 5px;
+  }
+
+  .inlineTime:global(.ui-time-input) {
+    padding: 7px 5px;
+    font-size: 0.8rem;
+  }
+}

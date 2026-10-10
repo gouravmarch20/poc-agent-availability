@@ -3,6 +3,7 @@ import mongoose from 'mongoose';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { MONGODB_URI } from '../config.js';
+import { seedV2Accounts } from '../seed.js';
 import { listMigrations, nextMigrationVersion, runMigrations } from './migrator.js';
 
 const command = process.argv[2];
@@ -47,6 +48,11 @@ async function main() {
         console.log('Running migrations...');
         await runMigrations();
         break;
+      case 'seed-accounts':
+        console.log('Syncing v2 seeded accounts...');
+        await seedV2Accounts();
+        console.log('Seeded accounts synced successfully');
+        break;
       case 'list':
       case 'status':
         await listMigrations();
@@ -54,6 +60,7 @@ async function main() {
       default:
         console.log('Available commands:');
         console.log('  migrate             Run pending migrations');
+        console.log('  seed-accounts       Sync seeded accounts from v2');
         console.log('  list | status       Show applied and pending versions');
         console.log('  create <slug>       Create the next versioned migration');
     }

@@ -1,5 +1,5 @@
 import { api } from '../api';
-import { UserListResponseSchema, UserResponseSchema } from '../apiSchemas';
+import { OkResponseSchema, UserListResponseSchema, UserResponseSchema } from '../apiSchemas';
 import { User } from '../types';
 
 export interface CreateUserPayload {
@@ -29,4 +29,8 @@ export function setUserActive(id: string, isActive: boolean) {
     json: { isActive },
     responseSchema: UserResponseSchema,
   });
+}
+
+export function permanentlyDeleteUser(id: string) {
+  return api(`/api/users/${id}`, { method: 'DELETE', responseSchema: OkResponseSchema });
 }

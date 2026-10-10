@@ -27,13 +27,18 @@ function publicAgent(agent: HydratedDocument<AgentRecord>): PublicAgent {
 
 export const list = asyncHandler(async (request, response) => {
   const includeDeleted = staffRoles.includes(request.user.role) && request.query.includeDeleted === 'true';
-  const agents = await listAgents(includeDeleted);
+  let agents = await listAgents(includeDeleted);
+  if (request.user.role === 'customer') agents = agents.filter((agent) => agent.images.length > 0);
   response.json({ agents: agents.map(publicAgent) });
 });
 
 export const getById = asyncHandler(async (request, response) => {
   const agent = await findAgentById(request.params.id);
-  if (!agent || (agent.isDeleted && !staffRoles.includes(request.user.role))) {
+  if (
+    !agent
+    || (agent.isDeleted && !staffRoles.includes(request.user.role))
+    || (request.user.role === 'customer' && agent.images.length === 0)
+  ) {
     response.status(404).json({ error: 'Agent not found' });
     return;
   }
@@ -41,14 +46,62 @@ export const getById = asyncHandler(async (request, response) => {
 });
 
 export const create = asyncHandler(async (request, response) => {
-  const agent = await createAgent(request.body);
-  response.status(201).json({ agent: publicAgent(agent) });
+  const files: Express.Multer.File[] = Array.isArray(request.files) ? request.files : [];
+  if (!files.length) {
+    response.status(400).json({
+      error: 'Validation failed',
+      details: [{ path: 'photos', message: 'Add at least one photo for the new agent.' }],
+    });
+    return;
+  }
+  if (files.some((file) => !ALLOWED_IMAGE_TYPES.includes(file.mimetype) || !looksLikeImage(file.buffer, file.mimetype))) {
+    response.status(400).json({
+      error: 'Validation failed',
+      details: [{ path: 'photos', message: 'Use a valid JPEG, PNG or WebP photo.' }],
+    });
+    return;
+  }
+
+  const images: AgentImageRecord[] = [];
+  const uploadedFileIds = [];
+  try {
+    for (const [order, file] of files.entries()) {
+      const fileId = await putFile({
+        buffer: file.buffer,
+        filename: file.originalname || 'image',
+        contentType: file.mimetype,
+      });
+      uploadedFileIds.push(fileId);
+      images.push({
+        fileId,
+        filename: file.originalname || 'image',
+        contentType: file.mimetype,
+        size: file.size,
+        order,
+        isCover: order === 0,
+        uploadedAt: new Date(),
+      });
+    }
+
+    const agent = await createAgent({ ...request.body, images });
+    response.status(201).json({ agent: publicAgent(agent) });
+  } catch (error) {
+    await Promise.all(uploadedFileIds.map((fileId) => deleteFile(fileId).catch(() => undefined)));
+    throw error;
+  }
 });
 
 export const update = asyncHandler(async (request, response) => {
   const agent = await findAgentById(request.params.id);
   if (!agent || agent.isDeleted) {
     response.status(404).json({ error: 'Agent not found' });
+    return;
+  }
+  if (agent.images.length === 0) {
+    response.status(400).json({
+      error: 'Validation failed',
+      details: [{ path: 'photos', message: 'Add at least one photo before saving this agent.' }],
+    });
     return;
   }
   Object.assign(agent, request.body);
@@ -144,6 +197,10 @@ export const deleteImage = asyncHandler(async (request, response) => {
   const index = agent.images.findIndex((image) => String(image.fileId) === request.params.fileId);
   if (index < 0) {
     response.status(404).json({ error: 'Image not found' });
+    return;
+  }
+  if (agent.images.length === 1) {
+    response.status(409).json({ error: 'Each agent must keep at least one photo.' });
     return;
   }
   const [removed] = agent.images.splice(index, 1);

@@ -1,7 +1,8 @@
 import type { HydratedDocument } from 'mongoose';
 import { Agent, AgentRecord } from '../models/Agent.js';
 
-export type NewAgent = Pick<AgentRecord, 'name' | 'phone' | 'address' | 'badges' | 'pricing'>;
+export type NewAgent = Pick<AgentRecord, 'name' | 'phone' | 'address' | 'badges' | 'pricing'>
+  & Partial<Pick<AgentRecord, 'images'>>;
 
 export function listAgents(includeDeleted: boolean) {
   return Agent.find(includeDeleted ? {} : { isDeleted: false }).sort({ name: 1 });

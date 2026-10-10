@@ -1,0 +1,85 @@
+.root {
+  position: relative;
+  z-index: 20;
+}
+
+.trigger {
+  display: inline-flex;
+  min-height: 40px;
+  align-items: center;
+  padding: 8px 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.deleteTrigger {
+  border-color: rgba(155, 44, 44, 0.2);
+  background: #fff5f4;
+  color: var(--danger);
+}
+
+.trigger:hover,
+.trigger[aria-expanded='true'] {
+  background: #f1f7f4;
+  color: var(--ink);
+}
+
+.trigger:focus-visible {
+  outline: 2px solid #316c99;
+  outline-offset: 2px;
+}
+
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(28, 42, 36, 0.45);
+}
+
+.modal {
+  width: min(420px, 100%);
+  padding: 24px 20px 20px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--card);
+  box-shadow: var(--shadow);
+}
+
+.modal h3 {
+  margin-bottom: 10px;
+}
+
+.copy p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.subject {
+  display: inline-flex;
+  width: fit-content;
+  margin-bottom: 10px !important;
+  padding: 5px 9px;
+  border-radius: 6px;
+  background: #fbe7e5;
+  color: var(--danger) !important;
+  font-weight: 700;
+}
+
+.copy p:last-child {
+  margin-bottom: 18px;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}

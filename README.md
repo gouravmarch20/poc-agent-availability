@@ -21,10 +21,13 @@ npm run dev --prefix client
 
 Seeded accounts:
 
-- Super admin: `admin@local.test` / `Admin@123`
+- Super admin: `superadmin@gmail.com` / `supper@123`
+- Admin: `admin@local.test` / `Admin@123`
 - Customer: `customer@local.test` / `Customer@123`
 
-Sessions: httpOnly cookie, 15-minute idle timeout, 1-hour absolute timeout, max 7 successful logins per user per calendar day.
+Sessions: httpOnly cookie, 15-minute idle timeout, 1-hour absolute timeout. Customers and agents are limited to 7 successful logins per day; admins are exempt.
+
+User deletion: admins can soft-delete and restore accounts. Only super admins can permanently delete users.
 
 
 ## Database Migrations
@@ -44,6 +47,9 @@ npm run migrations:list
 
 # Check status
 npm run migrations:status
+
+# Sync the v2 seeded accounts in an existing database
+npm run seed:accounts
 ```
 
 ### Creating New Migrations:
@@ -53,3 +59,4 @@ npm run migrations:status
 
 ### Current Migrations:
 - `initial_schema_and_seed`: Creates initial schema and seeds admin/customer users
+- `seed_test_data` (v2): Seeds test data and syncs the current super-admin, admin, and customer accounts

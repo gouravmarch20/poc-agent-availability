@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import type { RequestHandler } from 'express';
 import multer from 'multer';
 import { z } from 'zod';
 import * as agentsController from '../controllers/agents.controller.js';
@@ -31,6 +32,26 @@ const agentSchema = z.object({
 
 const updateSchema = agentSchema.partial();
 
+const parseAgentForm: RequestHandler = (request, response, next) => {
+  if (typeof request.body.agent !== 'string') {
+    response.status(400).json({
+      error: 'Validation failed',
+      details: [{ path: 'agent', message: 'Agent details are required.' }],
+    });
+    return;
+  }
+
+  try {
+    request.body = JSON.parse(request.body.agent);
+    next();
+  } catch {
+    response.status(400).json({
+      error: 'Validation failed',
+      details: [{ path: 'agent', message: 'Agent details must be valid JSON.' }],
+    });
+  }
+};
+
 const reorderSchema = z.object({
   images: z
     .array(
@@ -47,7 +68,14 @@ router.get('/', agentsController.list);
 
 router.get('/:id', agentsController.getById);
 
-router.post('/', requireRole(...staffRoles), parseBody(agentSchema), agentsController.create);
+router.post(
+  '/',
+  requireRole(...staffRoles),
+  upload.array('images', MAX_AGENT_IMAGES),
+  parseAgentForm,
+  parseBody(agentSchema),
+  agentsController.create
+);
 
 router.patch('/:id', requireRole(...staffRoles), parseBody(updateSchema), agentsController.update);
 

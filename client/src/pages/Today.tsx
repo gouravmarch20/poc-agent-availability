@@ -1,11 +1,27 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { listAvailability, listUpcomingDates } from '../services/availability';
-import { useApiRequest } from '../hooks/useApiRequest';
+import { useAuth } from '../auth';
+import { Button } from '../components/Controls';
 import { EmptyState, ErrorMessage, LoadingState } from '../components/Feedback';
+import { useApiRequest } from '../hooks/useApiRequest';
+import { listAvailability, listUpcomingDates } from '../services/availability';
 import { AvailabilityItem } from '../types';
+import styles from './Today.module.css';
+
+function shiftDate(date: string, amount: number): string {
+  const [year, month, day] = date.split('-').map(Number);
+  return new Date(Date.UTC(year, month - 1, day + amount)).toISOString().slice(0, 10);
+}
+
+function shortDate(date: string): string {
+  const [year, month, day] = date.split('-').map(Number);
+  return new Intl.DateTimeFormat('en', { month: 'short', day: 'numeric', timeZone: 'UTC' })
+    .format(new Date(Date.UTC(year, month - 1, day)));
+}
 
 export default function Today() {
+  const { user } = useAuth();
+  const isCustomer = user?.role === 'customer';
   const [dates, setDates] = useState<string[]>([]);
   const [selected, setSelected] = useState('');
   const [items, setItems] = useState<AvailabilityItem[]>([]);
@@ -28,8 +44,10 @@ export default function Today() {
     loadUpcoming(() => listUpcomingDates(controller.signal))
       .then((data) => {
         const today = data.from;
-        const next = [today, ...data.dates.filter((d) => d !== today)];
-        setDates(next);
+        const visibleDates = isCustomer
+          ? [shiftDate(today, -1), today, shiftDate(today, 1)]
+          : [today, ...data.dates.filter((date) => date !== today)];
+        setDates(visibleDates);
         setSelected(today);
       })
       .catch(() => undefined)
@@ -37,7 +55,7 @@ export default function Today() {
         if (!controller.signal.aborted) setDatesLoading(false);
       });
     return () => controller.abort();
-  }, [loadUpcoming]);
+  }, [isCustomer, loadUpcoming]);
 
   useEffect(() => {
     if (!selected) return;
@@ -56,49 +74,58 @@ export default function Today() {
       <h1>Available agents</h1>
       <p className="meta">Times are in Asia/Kolkata. Tap a date to see who is on duty.</p>
       {error && <ErrorMessage message={error} />}
-      <div className="chips">
-        {datesLoading ? <LoadingState label="Loading dates..." compact /> : dates.map((d) => (
-          <button
-            key={d}
+      <div className={`chips${isCustomer ? ' customer-date-options' : ''}`}>
+        {datesLoading ? <LoadingState label="Loading dates..." compact /> : dates.map((date, index) => (
+          <Button
+            key={date}
             type="button"
-            className={`chip ${d === selected ? 'active' : ''}`}
+            className={`chip date-chip ${date === selected ? 'active' : ''}`}
             onClick={() => {
-              if (d !== selected) {
+              if (date !== selected) {
                 setItemsLoading(true);
                 clearUpcomingError();
                 clearAvailabilityError();
-                setSelected(d);
+                setSelected(date);
               }
             }}
           >
-            {d}
-          </button>
+            {isCustomer ? (
+              <>
+                <span>{['Yesterday', 'Today', 'Tomorrow'][index]}</span>
+                <small>{shortDate(date)}</small>
+              </>
+            ) : shortDate(date)}
+          </Button>
         ))}
       </div>
-      <div className="grid agents" style={{ marginTop: 16 }}>
+      <div className="grid grid-cols-1 gap-3.5 min-[720px]:grid-cols-2 mt-4">
         {itemsLoading ? <LoadingState label="Loading availability..." /> : items.length === 0 ? (
           <EmptyState message="No agents assigned for this date." />
         ) : items.map((item) => (
-          <Link key={item.id} className="card agent-card" to={`/agents/${item.agent.id}?date=${selected}`}>
+          <Link key={item.id} className={`card ${styles.agentCard}`} to={`/agents/${item.agent.id}?date=${selected}`}>
             {item.agent.coverUrl ? (
               <img src={item.agent.coverUrl} alt={item.agent.name} />
             ) : (
               <div className="placeholder" />
             )}
             <h3>{item.agent.name}</h3>
-            <p className="meta">
-              {item.startTime} – {item.endTime}
-            </p>
             <div className="badges">
-              {item.agent.badges.map((b) => (
-                <span key={b} className="badge">
-                  {b}
+              {item.agent.badges.map((badge, index) => (
+                <span key={badge} className={`badge ${index % 3 === 1 ? styles.badgeTone1 : index % 3 === 2 ? styles.badgeTone2 : ''}`}>
+                  {badge}
                 </span>
               ))}
             </div>
-            <p>
-              {item.agent.pricing.currency} {item.agent.pricing.amount}
-            </p>
+            <div className={styles.facts}>
+              <p className={styles.time}>
+                <span>Available</span>
+                <strong>{item.startTime} – {item.endTime}</strong>
+              </p>
+              <p className={styles.price}>
+                <span>Session rate</span>
+                <strong>{item.agent.pricing.currency} {item.agent.pricing.amount}</strong>
+              </p>
+            </div>
           </Link>
         ))}
       </div>

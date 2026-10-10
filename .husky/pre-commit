@@ -1,2 +1,16 @@
-# Run lint-staged for frontend TypeScript files
-cd client && npx lint-staged
+set -eu
+
+if git diff --cached --name-only --diff-filter=ACM | grep -q '^client/'; then
+  echo "Running frontend checks..."
+  cd client
+  npx eslint . --ext ts,tsx --fix --report-unused-disable-directives --max-warnings 0
+  npx tsc --noEmit
+  cd ..
+fi
+
+if git diff --cached --name-only --diff-filter=ACM | grep -q '^server/'; then
+  echo "Running backend checks..."
+  cd server
+  npx tsc --noEmit --pretty false
+  cd ..
+fi

@@ -1,0 +1,75 @@
+.tableScroll {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: auto;
+}
+
+.table {
+  min-width: 540px;
+}
+
+.table td:first-child {
+  min-width: 230px;
+}
+
+.table td:last-child {
+  width: 130px;
+}
+
+.tableActions {
+  flex-wrap: nowrap;
+  gap: 6px;
+}
+
+.tableActions :global(.ui-button) {
+  padding: 8px 10px;
+  font-size: 0.78rem;
+  white-space: nowrap;
+}
+
+.tableActions :global(.more-menu-trigger) {
+  height: 30px;
+  min-height: 30px;
+  padding: 4px 9px;
+  border-radius: 6px;
+  font-size: 0.74rem;
+}
+
+.roleBadge,
+.statusBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 8px;
+  border-radius: 999px;
+  font-size: 0.74rem;
+  font-weight: 650;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.roleBadge {
+  background: #e9eef8;
+  color: #3d5684;
+}
+
+.roleBadge[data-role='admin'],
+.roleBadge[data-role='superAdmin'] {
+  background: #fff0dc;
+  color: #795014;
+}
+
+.roleBadge[data-role='agent'] {
+  background: #e7f3ef;
+  color: var(--teal-dark);
+}
+
+.statusBadge {
+  background: #f0f1ef;
+  color: #5e6963;
+}
+
+.statusActive {
+  background: #e2f2e8;
+  color: #23613f;
+}

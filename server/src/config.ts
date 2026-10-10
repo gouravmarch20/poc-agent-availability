@@ -9,12 +9,16 @@ export const MONGODB_URI =
 export const SESSION_SECRET = process.env.SESSION_SECRET || 'dev-session-secret';
 export const CLIENT_ORIGIN = process.env.CLIENT_ORIGIN || 'http://localhost:5173';
 export const NODE_ENV = process.env.NODE_ENV || 'development';
+export const SEED_SUPER_ADMIN_EMAIL = process.env.SEED_SUPER_ADMIN_EMAIL || 'superadmin@gmail.com';
+export const SEED_SUPER_ADMIN_PASSWORD = process.env.SEED_SUPER_ADMIN_PASSWORD || 'supper@123';
 export const SEED_ADMIN_EMAIL = process.env.SEED_ADMIN_EMAIL || 'admin@local.test';
 export const SEED_ADMIN_PASSWORD = process.env.SEED_ADMIN_PASSWORD || 'Admin@123';
 
 export const IDLE_MS = 15 * 60 * 1000;
 export const ABSOLUTE_SESSION_MS = 60 * 60 * 1000;
 export const MAX_LOGINS_PER_DAY = 7;
+export const ACCESS_VALIDITY_MONTHS = 6;
+export const ACCESS_EXPIRY_MESSAGE = 'Access period ended. Contact us to renew your access.';
 export const MAX_AGENT_IMAGES = 10;
 export const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 export const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];

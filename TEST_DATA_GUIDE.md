@@ -7,7 +7,7 @@ This guide documents all the seed test data that has been created for developmen
 
 | Collection | Count | Details |
 |-----------|-------|---------|
-| Users | 8 | 1 Super Admin, 1 Admin, 3 Agents, 3 Customers |
+| Users | 9 | 1 Super Admin, 2 Admins, 3 Agents, 3 Customers |
 | Agents | 3 | Service providers with pricing and availability |
 | Availability | 21 | 7 days × 3 agents (1 slot per day) |
 | Analytics Events | 468 | Page views and session starts across 7 days |
@@ -15,13 +15,20 @@ This guide documents all the seed test data that has been created for developmen
 ## User Accounts
 
 ### Super Admin
-- **Email**: `admin@local.test`
-- **Password**: `Admin@123`
+- **Email**: `superadmin@gmail.com`
+- **Password**: `supper@123`
 - **Role**: `superAdmin`
 - **Name**: Super Admin
 - **Use case**: Full system access, manage all admins and data
 
 ### Admin Account
+- **Email**: `admin@local.test`
+- **Password**: `Admin@123`
+- **Role**: `admin`
+- **Name**: Admin
+- **Use case**: Manage users and agents; soft-delete and restore user accounts
+
+### Additional Admin Account
 - **Email**: `admin.user@local.test`
 - **Password**: `Admin@123`
 - **Role**: `admin`
@@ -163,13 +170,13 @@ curl 'http://localhost:5050/api/analytics/events?startDate=2026-10-03&endDate=20
 4. Check today's bookings
 
 ### 3. Admin Flow
-1. Login as `admin.user@local.test` / `Admin@123`
+1. Login as `admin@local.test` / `Admin@123`
 2. Manage agents and users
 3. View and manage availability
 4. Monitor analytics and user behavior
 
 ### 4. Super Admin Flow
-1. Login as `admin@local.test` / `Admin@123`
+1. Login as `superadmin@gmail.com` / `supper@123`
 2. Full system access
 3. Manage all users (admins, agents, customers)
 4. System configuration and monitoring

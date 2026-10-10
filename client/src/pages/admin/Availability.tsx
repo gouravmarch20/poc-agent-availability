@@ -4,6 +4,8 @@ import * as availabilityApi from '../../services/availability';
 import { useApiRequest } from '../../hooks/useApiRequest';
 import { EmptyState, ErrorMessage, LoadingState } from '../../components/Feedback';
 import { Agent, AvailabilityItem } from '../../types';
+import { Button, DateInput, Select, TimeInput } from '../../components/Controls';
+import styles from './Availability.module.css';
 
 function todayLocal() {
   const d = new Date();
@@ -12,6 +14,7 @@ function todayLocal() {
 }
 
 export default function Availability() {
+  const minimumDate = todayLocal();
   const [date, setDate] = useState(todayLocal());
   const [agents, setAgents] = useState<Agent[]>([]);
   const [items, setItems] = useState<AvailabilityItem[]>([]);
@@ -84,54 +87,64 @@ export default function Availability() {
   }
 
   return (
-    <div>
-      <h1>Date-wise availability</h1>
-      <div className="field" style={{ maxWidth: 220 }}>
-        <label>Date (Asia/Kolkata)</label>
-        <input
-          type="date"
-          value={date}
-          onChange={(e) => {
-            setLoading(true);
-            clearError();
-            setDate(e.target.value);
-          }}
-        />
-      </div>
-      <form className="card" onSubmit={assign}>
-        <h2>Assign agent</h2>
-        {error && <ErrorMessage message={error} />}
-        <div className="grid two-col">
-          <div className="field">
-            <label>Agent</label>
-            <select value={agentId} onChange={(e) => setAgentId(e.target.value)}>
-              {agents.map((a) => (
-                <option key={a.id} value={a.id}>
-                  {a.name}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="row">
-            <div className="field">
-              <label>Start</label>
-              <input type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} />
-            </div>
-            <div className="field">
-              <label>End</label>
-              <input type="time" value={endTime} onChange={(e) => setEndTime(e.target.value)} />
-            </div>
-          </div>
+    <div className="grid gap-4">
+      <header className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between sm:gap-5">
+        <h1 className="mb-1">Date-wise availability</h1>
+        <div className="field !mb-0 w-full sm:max-w-[260px]">
+          <label htmlFor="availability-date">Date (Asia/Kolkata)</label>
+          <DateInput
+            id="availability-date"
+            value={date}
+            min={minimumDate}
+            onChange={(e) => {
+              if (e.target.value < todayLocal()) return;
+              setLoading(true);
+              clearError();
+              setDate(e.target.value);
+            }}
+          />
         </div>
-        <button type="submit">Assign</button>
+      </header>
+      <form className="card p-[18px]" onSubmit={assign}>
+        <h2 className="mb-4 text-lg">Assign agent</h2>
+        {error && <div className="mb-3"><ErrorMessage message={error} /></div>}
+        <div className="grid grid-cols-1 items-end gap-3.5 md:grid-cols-2 min-[901px]:grid-cols-[minmax(220px,1.5fr)_repeat(2,minmax(130px,0.8fr))_auto]">
+          <div className="field !mb-0 min-w-0">
+            <label htmlFor="availability-agent">Agent</label>
+            <Select
+              id="availability-agent"
+              value={agentId}
+              onChange={(e) => setAgentId(e.target.value)}
+            >
+              {agents.length === 0 ? (
+                <option value="">No agents available</option>
+              ) : agents.map((a) => (
+                  <option key={a.id} value={a.id}>{a.name}</option>
+                ))}
+            </Select>
+          </div>
+          <div className="field !mb-0 min-w-0">
+            <label htmlFor="availability-start-time">Start</label>
+            <TimeInput id="availability-start-time" value={startTime} onChange={(e) => setStartTime(e.target.value)} />
+          </div>
+          <div className="field !mb-0 min-w-0">
+            <label htmlFor="availability-end-time">End</label>
+            <TimeInput id="availability-end-time" value={endTime} onChange={(e) => setEndTime(e.target.value)} />
+          </div>
+          <Button className="min-h-12 min-w-[100px] justify-self-start max-[600px]:w-full" type="submit" disabled={!agentId}>Assign</Button>
+        </div>
       </form>
-      <div className="card" style={{ marginTop: 16, overflowX: 'auto' }}>
-        <table>
+      <section className={`card ${styles.scheduleCard}`} aria-labelledby="availability-schedule-heading">
+        <div className="mb-3 flex items-center justify-between gap-3">
+          <h2 className="m-0 text-base" id="availability-schedule-heading">Assigned agents</h2>
+          {!loading && <span className={styles.scheduleCount}>{items.length} {items.length === 1 ? 'assignment' : 'assignments'}</span>}
+        </div>
+        <table className={styles.table}>
           <thead>
             <tr>
-              <th>Agent</th>
-              <th>Hours</th>
-              <th></th>
+              <th scope="col">Agent</th>
+              <th scope="col">Hours</th>
+              <th scope="col"><span className="sr-only">Actions</span></th>
             </tr>
           </thead>
           <tbody>
@@ -143,39 +156,43 @@ export default function Availability() {
               <tr key={item.id}>
                 <td>{item.agent.name}</td>
                 <td>
-                  <input
-                    type="time"
-                    value={item.startTime}
-                    onChange={(e) => {
-                      setItems((current) => current.map((entry) =>
-                        entry.id === item.id ? { ...entry, startTime: e.target.value } : entry
-                      ));
-                    }}
-                    onBlur={() => updateSlot(item)}
-                  />
-                  –
-                  <input
-                    type="time"
-                    value={item.endTime}
-                    onChange={(e) => {
-                      setItems((current) => current.map((entry) =>
-                        entry.id === item.id ? { ...entry, endTime: e.target.value } : entry
-                      ));
-                    }}
-                    onBlur={() => updateSlot(item)}
-                  />
+                  <div className={styles.hoursEditor}>
+                    <TimeInput
+                      className={styles.inlineTime}
+                      aria-label={`Start time for ${item.agent.name}`}
+                      value={item.startTime}
+                      onChange={(e) => {
+                        setItems((current) => current.map((entry) =>
+                          entry.id === item.id ? { ...entry, startTime: e.target.value } : entry
+                        ));
+                      }}
+                      onBlur={() => updateSlot(item)}
+                    />
+                    <span aria-hidden="true">to</span>
+                    <TimeInput
+                      className={styles.inlineTime}
+                      aria-label={`End time for ${item.agent.name}`}
+                      value={item.endTime}
+                      onChange={(e) => {
+                        setItems((current) => current.map((entry) =>
+                          entry.id === item.id ? { ...entry, endTime: e.target.value } : entry
+                        ));
+                      }}
+                      onBlur={() => updateSlot(item)}
+                    />
+                  </div>
                 </td>
                 <td>
-                  <button type="button" className="danger" onClick={() => remove(item.id)}>
+                  <Button type="button" variant="danger" onClick={() => remove(item.id)}>
                     Remove
-                  </button>
+                  </Button>
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
         {!loading && items.length === 0 && <EmptyState message="No assignments for this date." />}
-      </div>
+      </section>
     </div>
   );
 }

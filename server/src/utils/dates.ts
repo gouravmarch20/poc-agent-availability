@@ -1,8 +1,13 @@
 import { DateTime } from 'luxon';
-import { APP_TZ, AVAILABILITY_RETENTION_DAYS } from '../config.js';
+import { ACCESS_VALIDITY_MONTHS, APP_TZ, AVAILABILITY_RETENTION_DAYS } from '../config.js';
 
 export function todayYmd(): string {
   return DateTime.now().setZone(APP_TZ).toFormat('yyyy-MM-dd');
+}
+
+export function isAccountAccessExpired(createdAt: Date): boolean {
+  const expiresAt = DateTime.fromJSDate(createdAt, { zone: 'utc' }).plus({ months: ACCESS_VALIDITY_MONTHS });
+  return Date.now() >= expiresAt.toMillis();
 }
 
 export function calendarDateYmd(value: unknown): string | null {

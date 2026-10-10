@@ -1,0 +1,139 @@
+.page {
+  width: 100%;
+  max-width: 1040px;
+  margin: 0 auto;
+  padding: 8px 0 32px;
+}
+
+.pageHeading {
+  margin-bottom: 28px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid var(--line);
+}
+
+.pageHeading h1 {
+  margin: 0;
+  font-family: Georgia, serif;
+  font-size: 1.85rem;
+  font-weight: 500;
+}
+
+.eyebrow,
+.sectionLabel {
+  margin: 0 0 7px;
+  color: var(--teal-dark);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.securityLayout {
+  display: grid;
+  grid-template-columns: minmax(220px, 0.8fr) minmax(0, 1.2fr);
+  align-items: start;
+  gap: 32px;
+  max-width: 900px;
+}
+
+.securityIntro {
+  padding: 8px 0 8px 18px;
+  border-left: 3px solid var(--teal);
+}
+
+.securityIntro h2 {
+  margin: 0 0 8px;
+  font-size: 1.05rem;
+}
+
+.securityIntro > p:last-child {
+  max-width: 260px;
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.form {
+  padding: 22px;
+  border-radius: 8px;
+  box-shadow: 0 5px 18px rgba(28, 42, 36, 0.06);
+}
+
+.form .field:last-of-type {
+  margin-bottom: 18px;
+}
+
+.message {
+  margin: 0 0 16px;
+  padding: 10px 12px;
+  border-radius: 6px;
+  font-size: 0.9rem;
+}
+
+.messageError {
+  background: #fff0ef;
+  color: var(--danger);
+}
+
+.messageSuccess {
+  background: #e7f3ef;
+  color: var(--teal-dark);
+}
+
+.formActions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.showPassword {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.86rem;
+  cursor: pointer;
+}
+
+.showPassword input {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 3px;
+  background: transparent;
+  accent-color: var(--teal);
+}
+
+.submit {
+  padding: 11px 16px;
+  border-radius: 7px;
+  font-weight: 600;
+}
+
+@media (max-width: 680px) {
+  .page {
+    padding-top: 0;
+  }
+
+  .pageHeading {
+    margin-bottom: 20px;
+  }
+
+  .securityLayout {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 18px;
+  }
+
+  .securityIntro {
+    padding-left: 14px;
+  }
+
+  .form {
+    padding: 18px;
+  }
+}

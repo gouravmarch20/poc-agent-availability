@@ -4,12 +4,15 @@ import { AnalyticsEvent } from '../../models/AnalyticsEvent.js';
 import { Agent } from '../../models/Agent.js';
 import { Availability } from '../../models/Availability.js';
 import { User } from '../../models/User.js';
+import { seedV2Accounts } from '../../seed.js';
 import { MigrationDefinition } from '../types.js';
 
 const migration: MigrationDefinition = {
   version: 'v2',
   name: 'seed_test_data',
   async up() {
+    await seedV2Accounts();
+
     const users = [
       { name: 'Agent John', email: 'agent.john@local.test', password: 'Agent@123', role: 'agent', phone: '+91-9876543210', dob: '1990-05-15' },
       { name: 'Agent Sarah', email: 'agent.sarah@local.test', password: 'Agent@123', role: 'agent', phone: '+91-9876543211', dob: '1992-08-22' },
@@ -74,7 +77,11 @@ const migration: MigrationDefinition = {
       email: { $in: ['agent.john@local.test', 'customer.alice@local.test', 'admin.user@local.test'] },
     });
     const userIdByEmail = new Map(analyticsUsers.map((user) => [user.email, user._id]));
-    const eventDefinitions = [
+    const eventDefinitions: Array<{
+      email?: string;
+      path: string;
+      type: 'page_view' | 'session_start';
+    }> = [
       { email: 'agent.john@local.test', path: '/today', type: 'page_view' },
       { email: 'agent.john@local.test', path: '/account', type: 'page_view' },
       { email: 'customer.alice@local.test', path: '/', type: 'session_start' },
@@ -86,7 +93,7 @@ const migration: MigrationDefinition = {
       { email: 'admin.user@local.test', path: '/admin/analytics', type: 'page_view' },
       { path: '/', type: 'session_start' },
       { path: '/agents', type: 'page_view' },
-    ] as const;
+    ];
 
     const analyticsEvents = [];
     for (let dayOffset = 0; dayOffset < 7; dayOffset += 1) {

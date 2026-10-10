@@ -2,10 +2,12 @@ import { z } from 'zod';
 
 export class ApiError extends Error {
   public status: number;
+  public details: { path: string; message: string }[];
 
-  constructor(message: string, status: number) {
+  constructor(message: string, status: number, details: { path: string; message: string }[] = []) {
     super(message);
     this.status = status;
+    this.details = details;
   }
 }
 
@@ -82,7 +84,17 @@ export async function api<TResponse>(path: string, options: ApiOptions<TResponse
           : typeof data === 'object' && data !== null && 'message' in data && typeof data.message === 'string'
             ? data.message
             : 'Request failed';
-      throw new ApiError(message, response.status);
+      const details = typeof data === 'object' && data !== null && 'details' in data && Array.isArray(data.details)
+        ? data.details.filter((detail): detail is { path: string; message: string } => (
+          typeof detail === 'object'
+          && detail !== null
+          && 'path' in detail
+          && typeof detail.path === 'string'
+          && 'message' in detail
+          && typeof detail.message === 'string'
+        ))
+        : [];
+      throw new ApiError(message, response.status, details);
     }
 
     const result = responseSchema.safeParse(data);

@@ -16,8 +16,12 @@ const loginLimiter = rateLimit({
 });
 
 const loginSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(8).max(128),
+  email: z.string().email().refine(
+    (email) => email.toLowerCase().endsWith('@gmail.com')
+      || (process.env.NODE_ENV !== 'production' && email.toLowerCase().endsWith('@local.test')),
+    { message: 'Use a Gmail address' },
+  ),
+  password: z.string().min(5).max(128),
 });
 
 const passwordSchema = z.object({
