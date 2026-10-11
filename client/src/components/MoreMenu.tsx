@@ -1,4 +1,5 @@
-import { useState, type ReactNode } from 'react';
+import { useId, useState, type ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 import { Button } from './Controls';
 import styles from './MoreMenu.module.css';
 
@@ -10,6 +11,10 @@ interface MoreMenuProps {
   disabled?: boolean;
   buttonText?: string;
   buttonClassName?: string;
+  // Popup heading and confirm button; "safe" swaps the red delete look for a calm green one (e.g. Restore).
+  title?: string;
+  confirmText?: string;
+  tone?: 'danger' | 'safe';
 }
 
 export default function MoreMenu({
@@ -20,14 +25,18 @@ export default function MoreMenu({
   disabled = false,
   buttonText = 'Delete',
   buttonClassName,
+  title = 'Delete',
+  confirmText = 'Delete',
+  tone = 'danger',
 }: MoreMenuProps) {
   const [open, setOpen] = useState(false);
+  const titleId = useId();
 
   return (
     <div className={styles.root}>
       <Button
         type="button"
-        className={`${styles.trigger} ${styles.deleteTrigger} ${buttonClassName ?? ''}`}
+        className={`${styles.trigger} ${tone === 'safe' ? styles.safeTrigger : styles.deleteTrigger} ${buttonClassName ?? ''}`}
         aria-label={label}
         onClick={() => setOpen(true)}
         disabled={disabled}
@@ -35,12 +44,12 @@ export default function MoreMenu({
         {buttonText}
       </Button>
 
-      {open && (
+      {open && createPortal(
         <div className={styles.backdrop} role="presentation" onClick={() => setOpen(false)}>
-          <div className={styles.modal} role="dialog" aria-modal="true" aria-labelledby="delete-confirm-title" onClick={(event) => event.stopPropagation()}>
-            <h3 id="delete-confirm-title">Delete</h3>
+          <div className={styles.modal} role="dialog" aria-modal="true" aria-labelledby={titleId} onClick={(event) => event.stopPropagation()}>
+            <h3 id={titleId}>{title}</h3>
             <div className={styles.copy}>
-              <p className={styles.subject}>{subject}</p>
+              <p className={`${styles.subject}${tone === 'safe' ? ` ${styles.subjectSafe}` : ''}`}>{subject}</p>
               <p>{confirmation}</p>
             </div>
             <div className={styles.actions}>
@@ -49,18 +58,19 @@ export default function MoreMenu({
               </Button>
               <Button
                 type="button"
-                className="danger"
+                className={tone === 'safe' ? styles.confirmSafe : 'danger'}
                 onClick={() => {
                   setOpen(false);
                   void onConfirm();
                 }}
-                variant="danger"
+                variant={tone === 'safe' ? 'primary' : 'danger'}
               >
-                Delete
+                {confirmText}
               </Button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body,
       )}
     </div>
   );

@@ -1,6 +1,5 @@
 .root {
   position: relative;
-  z-index: 20;
 }
 
 .trigger {
@@ -20,6 +19,12 @@
   border-color: rgba(155, 44, 44, 0.2);
   background: #fff5f4;
   color: var(--danger);
+}
+
+.safeTrigger {
+  border-color: rgba(15, 110, 98, 0.3);
+  background: #eaf6f0;
+  color: var(--teal-dark);
 }
 
 .trigger:hover,
@@ -82,4 +87,14 @@
   display: flex;
   justify-content: flex-end;
   gap: 8px;
+}
+
+.subjectSafe {
+  background: #e2f2e8;
+  color: #23613f !important;
+}
+
+.confirmSafe {
+  background: var(--teal);
+  color: white;
 }

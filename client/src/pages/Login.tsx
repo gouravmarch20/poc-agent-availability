@@ -3,6 +3,18 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth';
 import { Button, Input } from '../components/Controls';
 import { ApiError } from '../api';
+import { notifyError } from '../lib/notify';
+import { routesFor } from '../routes';
+import { DEMO_ACCOUNTS } from '../demo/seed';
+
+const DEMO_MODE = import.meta.env.VITE_DEMO_MODE === 'true';
+
+// Dark text on a light tint of each role colour keeps the role icons readable.
+const DEMO_TONES = {
+  admin: 'bg-[#fff0dc] text-[#6b4510]',
+  agent: 'bg-[#dff1e8] text-[#145b43]',
+  customer: 'bg-[#e1ecfa] text-[#1e4a85]',
+} as const;
 
 const COPY = {
   brand: 'Agent Availability',
@@ -33,8 +45,8 @@ const CLASSES = {
 export default function Login() {
   const { login } = useAuth();
   const navigate = useNavigate();
-  const [email, setEmail] = useState<string>(import.meta.env.DEV ? 'customer@local.test' : '');
-  const [password, setPassword] = useState<string>(import.meta.env.DEV ? 'Customer@123' : '');
+  const [email, setEmail] = useState<string>(import.meta.env.DEV || DEMO_MODE ? 'customer@local.test' : '');
+  const [password, setPassword] = useState<string>(import.meta.env.DEV || DEMO_MODE ? 'Customer@123' : '');
   const [error, setError] = useState<string>('');
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
@@ -46,7 +58,7 @@ export default function Login() {
     const normalizedEmail = email.trim().toLowerCase();
     const isValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail);
     const isGmail = isValidEmail && normalizedEmail.endsWith('@gmail.com');
-    const isLocalTestAccount = import.meta.env.DEV
+    const isLocalTestAccount = (import.meta.env.DEV || DEMO_MODE)
       && isValidEmail
       && normalizedEmail.endsWith('@local.test');
     if (!isGmail && !isLocalTestAccount) {
@@ -61,9 +73,9 @@ export default function Login() {
     setIsSubmitting(true);
     try {
       const user = await login(normalizedEmail, password);
-      navigate(user.role === 'customer' || user.role === 'agent' ? '/' : '/admin', { replace: true });
+      navigate(routesFor(user.role).home, { replace: true });
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Login failed');
+      notifyError(err instanceof ApiError ? err.message : 'Login failed', { id: 'login-error' });
     } finally {
       setIsSubmitting(false);
     }
@@ -132,7 +144,39 @@ export default function Login() {
         <Button className={CLASSES.submit} type="submit" disabled={isSubmitting}>
           {isSubmitting ? COPY.submitting : COPY.submit}
         </Button>
-        <p className="mt-4 text-center text-xs leading-5 text-muted">{COPY.policy}</p>
+        {DEMO_MODE ? (
+          <section className="mt-6 rounded-2xl border border-line bg-white p-4" aria-labelledby="demo-accounts-heading">
+            <h2 id="demo-accounts-heading" className="text-sm font-bold text-ink">Try a demo account</h2>
+            <p className="mt-1 text-sm text-[#3b4a43]">Tap a role to fill the form, then press Sign in.</p>
+            <div className="mt-3 grid gap-2">
+              {DEMO_ACCOUNTS.map((account) => {
+                const selected = email.trim().toLowerCase() === account.email && password === account.password;
+                return (
+                  <button
+                    key={account.email}
+                    type="button"
+                    aria-pressed={selected}
+                    className={`flex min-h-[64px] items-center gap-3 rounded-xl border-2 px-3 py-2.5 text-left transition focus:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 ${selected ? 'border-brand bg-[#eaf6f0]' : 'border-line bg-white hover:border-brand'}`}
+                    onClick={() => { setEmail(account.email); setPassword(account.password); }}
+                  >
+                    <span className={`grid size-10 shrink-0 place-items-center rounded-full text-base font-bold ${DEMO_TONES[account.tone]}`} aria-hidden="true">
+                      {account.label.charAt(0)}
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-[0.95rem] font-bold text-ink">{account.label}</span>
+                      <span className="block text-[0.82rem] leading-snug text-[#3b4a43]">{account.description}</span>
+                      <span className="mt-1 block truncate font-mono text-[0.78rem] text-ink">{account.email} · {account.password}</span>
+                    </span>
+                    <span className={`shrink-0 text-lg font-bold ${selected ? 'text-brand' : 'text-transparent'}`} aria-hidden="true">✓</span>
+                  </button>
+                );
+              })}
+            </div>
+            <p className="mt-3 text-xs text-[#3b4a43]">Demo only: changes live in this browser tab and reset when it closes.</p>
+          </section>
+        ) : (
+          <p className="mt-4 text-center text-xs leading-5 text-muted">{COPY.policy}</p>
+        )}
       </form>
     </main>
   );

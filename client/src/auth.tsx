@@ -1,8 +1,9 @@
-import { createContext, useContext, useEffect, useMemo, useState, ReactNode } from 'react';
+import { createContext, useContext, useEffect, useMemo, useRef, useState, ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { API_UNAUTHORIZED_EVENT } from './api';
 import * as authApi from './services/auth';
 import { User, AuthContextType } from './types';
+import { notifyError } from './lib/notify';
 
 const AuthContext = createContext<AuthContextType | null>(null);
 const IDLE_MS = 15 * 60 * 1000;
@@ -15,6 +16,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<User | null>(null);
   const [ready, setReady] = useState<boolean>(false);
   const navigate = useNavigate();
+  const userRef = useRef<User | null>(null);
+
+  useEffect(() => {
+    userRef.current = user;
+  }, [user]);
 
   useEffect(() => {
     authApi.getCurrentUser()
@@ -25,6 +31,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   useEffect(() => {
     const clearSession = () => {
+      if (userRef.current) notifyError('Your session has expired', { description: 'Please sign in again to continue.', id: 'session-expired' });
       setUser(null);
       setReady(true);
     };
@@ -44,6 +51,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         } catch {
           /* ignore */
         }
+        notifyError('Signed out due to inactivity', { description: 'Please sign in again.', id: 'session-idle' });
         setUser(null);
         navigate('/login', { replace: true });
       }, IDLE_MS);

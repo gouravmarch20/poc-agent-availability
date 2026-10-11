@@ -5,9 +5,24 @@
 }
 
 .editing {
-  border: 2px solid #167356;
-  background: #edf7f1;
-  box-shadow: 0 0 0 3px rgba(22, 115, 86, 0.14);
+  border: 2px solid #2563eb;
+  background: #eef4ff;
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.16);
+}
+
+.editing::before {
+  position: absolute;
+  top: 14px;
+  bottom: 14px;
+  left: -2px;
+  width: 5px;
+  border-radius: 0 4px 4px 0;
+  background: #2563eb;
+  content: '';
+}
+
+.editingForm {
+  border-top: 4px solid #2563eb;
 }
 
 .adminCardHeading {
@@ -18,37 +33,114 @@
 }
 
 .adminCardHeading h3 {
-  margin-bottom: 8px;
+  margin: 0;
+}
+
+.adminCardTop {
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr);
+  gap: 14px;
+}
+
+.adminCover {
+  width: 96px;
+  height: 96px;
+  border-radius: 12px;
+  background: #ddd4c4;
+  object-fit: cover;
+}
+
+.adminDetails {
+  display: grid;
+  align-content: start;
+  gap: 6px;
+  min-width: 0;
+}
+
+.adminDetails :global(.badges) {
+  margin: 0;
+}
+
+.adminDetails :global(.meta) {
+  margin: 0;
+}
+
+.agentId {
+  width: fit-content;
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: #efe8da;
+  color: #5c4a2a;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.74rem;
+  font-weight: 600;
+}
+
+.thumbRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 14px 0;
+}
+
+.thumbRow img {
+  width: 44px;
+  height: 44px;
+  border: 2px solid transparent;
+  border-radius: 8px;
+  object-fit: cover;
+}
+
+.thumbRow .thumbCover {
+  border-color: var(--teal);
+}
+
+.thumbCount {
+  margin-left: auto;
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-weight: 600;
 }
 
 .editingIndicator {
   flex: 0 0 auto;
-  padding: 4px 8px;
+  padding: 4px 10px;
   border-radius: 999px;
-  background: #d8eee2;
-  color: #145b43;
+  background: #2563eb;
+  color: white;
   font-size: 0.72rem;
   font-weight: 700;
+  letter-spacing: 0.02em;
 }
 
 .selectTrigger {
-  min-width: 92px;
-  background: #e2efe8;
-  color: #145b43;
+  min-width: 104px;
+  border: 2px solid #1d4ed8;
+  background: #ffffff;
+  color: #1d4ed8;
   font-weight: 700;
+  transition: background-color 140ms ease, color 140ms ease, box-shadow 140ms ease;
 }
 
 .selectTrigger:hover {
-  background: #cfe7d9;
+  background: #1d4ed8;
+  color: #ffffff;
+}
+
+.selectTrigger:focus-visible {
+  outline: 3px solid rgba(37, 99, 235, 0.4);
+  outline-offset: 2px;
 }
 
 .selectTrigger.selected {
-  background: #167356;
-  color: white;
+  border-color: #1e40af;
+  background: #1e40af;
+  color: #ffffff;
 }
 
 .selectTrigger.selected:hover {
-  background: #105b43;
+  background: #1e3a8a;
 }
 
 .adminActions {
@@ -92,6 +184,7 @@
 .photoPicker {
   display: inline-flex !important;
   width: fit-content;
+  margin-top: 16px;
   min-height: 40px;
   align-items: center;
   border-radius: 7px;
@@ -146,7 +239,7 @@
 .editPhoto img {
   display: block;
   width: 100%;
-  height: 58px;
+  aspect-ratio: 1;
   object-fit: cover;
   background: #edf1ee;
 }
@@ -209,4 +302,64 @@
   border-radius: 6px;
   font-size: 0.68rem;
   white-space: nowrap;
+}
+
+.removed img {
+  opacity: 0.35;
+  filter: grayscale(1);
+}
+
+.removedBadge,
+.newBadge {
+  position: absolute;
+  right: 7px;
+  bottom: 7px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  color: white;
+  font-size: 0.68rem;
+  font-weight: 700;
+}
+
+.removedBadge {
+  background: #9b2c2c;
+}
+
+.newBadge {
+  background: #2563eb;
+}
+
+.photoRemove:global(.ui-button) {
+  border: 1px solid rgba(155, 44, 44, 0.25);
+  background: #fff5f4;
+  color: var(--danger);
+  font-weight: 600;
+}
+
+.photoRemove:global(.ui-button):disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.draftNote {
+  margin: 0 0 10px;
+  padding: 7px 10px;
+  border-radius: 8px;
+  background: #eef4ff;
+  color: #1e40af;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+/* Keep the form on screen while the agent list scrolls (two-column layout only). */
+@media (min-width: 720px) {
+  /* form.formPanel outranks the global .card rule (position: relative; overflow: visible). */
+  form.formPanel {
+    position: sticky;
+    top: 88px;
+    align-self: start;
+    max-height: calc(100vh - 104px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
 }

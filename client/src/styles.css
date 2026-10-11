@@ -112,7 +112,17 @@ h3 {
   border-radius: 999px;
   padding: 4px 10px;
   font-size: 0.8rem;
+  font-weight: 600;
 }
+
+.badge-teal { background: #e7f3ef; color: #1d5c52; }
+.badge-green { background: #dcf5e1; color: #1b6b32; }
+.badge-amber { background: #fff0d4; color: #8a5300; }
+.badge-blue { background: #e1ecfa; color: #24508a; }
+.badge-purple { background: #eee6fa; color: #5a3a96; }
+.badge-rose { background: #fbe4ea; color: #99274a; }
+.badge-gold { background: #fdf3c4; color: #7a5e00; }
+.badge-slate { background: #e9ecef; color: #4a5560; }
 
 .row {
   display: flex;
@@ -459,3 +469,27 @@ td {
 
 @tailwind components;
 @tailwind utilities;
+
+.agent-edit-photo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(104px, 1fr));
+  gap: 10px;
+}
+
+/* Toasts (sonner): match the app typography and keep text readable on small screens. */
+.app-toast {
+  border-radius: 14px !important;
+  font-family: "Segoe UI", system-ui, sans-serif !important;
+  box-shadow: 0 14px 36px rgba(28, 42, 36, 0.2) !important;
+}
+
+.app-toast-title {
+  font-size: 0.95rem;
+  font-weight: 650;
+  line-height: 1.35;
+}
+
+.app-toast-description {
+  font-size: 0.85rem;
+  line-height: 1.4;
+}

@@ -3,6 +3,8 @@ export interface User {
   name: string;
   email: string;
   role: 'superAdmin' | 'admin' | 'agent' | 'customer';
+  // For agent logins: the agent profile this account manages.
+  agentId?: string;
   phone: string;
   dob: string;
   isActive: boolean;
@@ -16,6 +18,9 @@ export interface Agent {
   phone: string;
   address: string;
   badges: string[];
+  bio?: string;
+  experienceYears?: number;
+  languages?: string[];
   coverUrl?: string;
   pricing: {
     amount: number;

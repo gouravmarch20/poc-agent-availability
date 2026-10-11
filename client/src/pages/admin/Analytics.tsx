@@ -6,7 +6,7 @@ import { AnalyticsSummary } from '../../types';
 
 export default function Analytics() {
   const [stats, setStats] = useState<AnalyticsSummary | null>(null);
-  const { execute, error } = useApiRequest();
+  const { execute, error } = useApiRequest({ silent: true });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {

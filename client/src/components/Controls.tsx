@@ -2,7 +2,7 @@ import { useId, type ReactNode } from 'react';
 import type {
   ButtonHTMLAttributes,
   InputHTMLAttributes,
-  SelectHTMLAttributes,
+  TextareaHTMLAttributes,
 } from 'react';
 
 type ButtonVariant = 'primary' | 'secondary' | 'danger' | 'linkish';
@@ -18,6 +18,12 @@ interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   errorClassName?: string;
 }
 
+interface TextareaProps extends TextareaHTMLAttributes<HTMLTextAreaElement> {
+  label?: ReactNode;
+  error?: ReactNode;
+  hint?: ReactNode;
+}
+
 type DateInputProps = Omit<InputProps, 'type'>;
 type TimeInputProps = Omit<InputProps, 'type'>;
 
@@ -30,9 +36,8 @@ export function Button({ variant = 'primary', className, ...props }: ButtonProps
   return <button {...props} className={mergeClassNames('ui-button', [variantClass, className].filter(Boolean).join(' '))} />;
 }
 
-export function Select({ className, ...props }: SelectHTMLAttributes<HTMLSelectElement>) {
-  return <select {...props} className={mergeClassNames('ui-select', className)} />;
-}
+export { Select } from './Select';
+export type { SelectOption } from './Select';
 
 export function Input({
   className,
@@ -61,6 +66,28 @@ export function Input({
         aria-describedby={describedBy}
       />
       {error != null && <p className={errorClassName} id={errorId}>{error}</p>}
+    </>
+  );
+}
+
+export function Textarea({ className, label, error, hint, id, ...props }: TextareaProps) {
+  const generatedId = useId();
+  const textareaId = id ?? generatedId;
+  const errorId = error ? `${textareaId}-error` : undefined;
+
+  return (
+    <>
+      {label != null && <label htmlFor={textareaId}>{label}</label>}
+      <textarea
+        {...props}
+        id={textareaId}
+        className={mergeClassNames('ui-input', className)}
+        aria-invalid={error ? true : undefined}
+        aria-describedby={errorId}
+        style={{ resize: 'vertical', ...props.style }}
+      />
+      {hint != null && <p className="meta" style={{ margin: '4px 0 0', fontSize: '0.78rem' }}>{hint}</p>}
+      {error != null && <p className="field-error" id={errorId}>{error}</p>}
     </>
   );
 }

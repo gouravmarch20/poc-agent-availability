@@ -6,15 +6,109 @@
 }
 
 .table {
-  min-width: 540px;
+  min-width: 640px;
+}
+
+.table td {
+  vertical-align: middle;
 }
 
 .table td:first-child {
-  min-width: 230px;
+  min-width: 240px;
 }
 
 .table td:last-child {
-  width: 130px;
+  width: 120px;
+}
+
+.person {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.avatar {
+  display: grid;
+  flex: 0 0 auto;
+  width: 40px;
+  height: 40px;
+  place-items: center;
+  border-radius: 50%;
+  color: white;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.personText {
+  display: grid;
+  min-width: 0;
+  gap: 2px;
+}
+
+.personName {
+  font-weight: 600;
+}
+
+.personText :global(.meta) {
+  margin: 0;
+}
+
+.muted {
+  color: var(--muted);
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+
+.tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 14px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--ink);
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 140ms ease, border-color 140ms ease, color 140ms ease;
+}
+
+.tab:hover {
+  border-color: var(--teal);
+}
+
+.tabActive {
+  border-color: var(--teal);
+  background: var(--teal);
+  color: white;
+}
+
+.tabCount {
+  min-width: 22px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: rgba(28, 42, 36, 0.08);
+  font-size: 0.76rem;
+  text-align: center;
+}
+
+.tabActive .tabCount {
+  background: rgba(255, 255, 255, 0.22);
+}
+
+.notice {
+  margin: 12px 0 0;
+  color: #23613f;
+  font-size: 0.9rem;
+  font-weight: 600;
 }
 
 .tableActions {
@@ -28,48 +122,101 @@
   white-space: nowrap;
 }
 
-.tableActions :global(.more-menu-trigger) {
-  height: 30px;
-  min-height: 30px;
-  padding: 4px 9px;
-  border-radius: 6px;
-  font-size: 0.74rem;
-}
-
-.roleBadge,
 .statusBadge {
   display: inline-flex;
   align-items: center;
-  padding: 4px 8px;
+  padding: 4px 10px;
   border-radius: 999px;
-  font-size: 0.74rem;
+  background: #f3e3e1;
+  color: #8a3a34;
+  font-size: 0.76rem;
   font-weight: 650;
   line-height: 1.2;
   white-space: nowrap;
 }
 
-.roleBadge {
-  background: #e9eef8;
-  color: #3d5684;
-}
-
-.roleBadge[data-role='admin'],
-.roleBadge[data-role='superAdmin'] {
-  background: #fff0dc;
-  color: #795014;
-}
-
-.roleBadge[data-role='agent'] {
-  background: #e7f3ef;
-  color: var(--teal-dark);
-}
-
-.statusBadge {
-  background: #f0f1ef;
-  color: #5e6963;
-}
-
 .statusActive {
   background: #e2f2e8;
   color: #23613f;
+}
+
+/* Phones: each customer becomes a stacked card instead of a wide table that scrolls sideways. */
+@media (max-width: 640px) {
+  .tableScroll {
+    overflow-x: visible;
+  }
+
+  .table {
+    min-width: 0;
+  }
+
+  .table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+  }
+
+  .table,
+  .table tbody {
+    display: block;
+    width: 100%;
+  }
+
+  .table tr {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 8px 12px;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .table tr:last-child {
+    border-bottom: 0;
+  }
+
+  .table td,
+  .table td:first-child,
+  .table td:last-child {
+    display: block;
+    width: auto;
+    min-width: 0;
+    padding: 0;
+    border: 0;
+  }
+
+  .table td[colspan] {
+    grid-column: 1 / -1;
+  }
+
+  .personTd {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .actionsTd {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .detailTd {
+    display: flex;
+    grid-column: 1 / -1;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 6px 0 0;
+    font-size: 0.9rem;
+  }
+
+  .detailTd::before {
+    content: attr(data-label);
+    color: var(--muted);
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
 }

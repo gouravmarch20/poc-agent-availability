@@ -18,6 +18,9 @@ interface ApiOptions<TResponse> extends Omit<RequestInit, 'body'> {
   responseSchema: z.ZodType<TResponse>;
 }
 
+// Demo flag: serve the API from an in-browser mock (sessionStorage) instead of the real backend.
+const DEMO_MODE = import.meta.env.VITE_DEMO_MODE === 'true';
+
 export const API_UNAUTHORIZED_EVENT = 'api:unauthorized';
 
 let pendingRequests = 0;
@@ -54,12 +57,17 @@ export async function api<TResponse>(path: string, options: ApiOptions<TResponse
     let response: Response;
     let text: string;
     try {
-      response = await fetch(path, {
-        credentials: 'include',
-        ...rest,
-        headers,
-        body,
-      });
+      if (DEMO_MODE) {
+        const { demoFetch } = await import('./demo/router');
+        response = await demoFetch(path, { method: rest.method, body });
+      } else {
+        response = await fetch(path, {
+          credentials: 'include',
+          ...rest,
+          headers,
+          body,
+        });
+      }
       text = await response.text();
     } catch (cause) {
       if (cause instanceof Error && cause.name === 'AbortError') throw cause;

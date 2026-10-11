@@ -2,7 +2,6 @@ import { FormEvent, useState } from 'react';
 import { changePassword } from '../services/auth';
 import { useApiRequest } from '../hooks/useApiRequest';
 import { Button, Input } from '../components/Controls';
-import { ErrorMessage } from '../components/Feedback';
 import styles from './Account.module.css';
 
 const MIN_PASSWORD_LENGTH = 8;
@@ -15,7 +14,7 @@ export default function Account() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState('');
   const [formError, setFormError] = useState('');
-  const { execute, error } = useApiRequest();
+  const { execute } = useApiRequest();
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -34,7 +33,7 @@ export default function Account() {
       setNewPassword('');
       setConfirmPassword('');
     } catch {
-      // The request hook displays the API error.
+      // The request hook shows the API error as a toast.
     } finally {
       setIsSubmitting(false);
     }
@@ -54,7 +53,6 @@ export default function Account() {
         </section>
 
         <form className={`card ${styles.form}`} onSubmit={onSubmit} autoComplete="on">
-          {error && <ErrorMessage message={error} />}
           {formError && <p className={`${styles.message} ${styles.messageError}`} role="alert">{formError}</p>}
           {message && <p className={`${styles.message} ${styles.messageSuccess}`} role="status">{message}</p>}
 

@@ -18,7 +18,7 @@
 }
 
 .table th:first-child {
-  width: 22%;
+  width: 32%;
 }
 
 .table th:last-child {
@@ -58,5 +58,121 @@
   .inlineTime:global(.ui-time-input) {
     padding: 7px 5px;
     font-size: 0.8rem;
+  }
+}
+
+.agentCell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.agentCover {
+  flex: 0 0 auto;
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: #ddd4c4;
+  object-fit: cover;
+}
+
+.noCover {
+  display: grid;
+  place-items: center;
+  background: #e7f3ef;
+  color: var(--teal-dark);
+  font-weight: 700;
+}
+
+.agentInfo {
+  display: grid;
+  min-width: 0;
+  gap: 4px;
+}
+
+.agentName {
+  overflow: hidden;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.agentId {
+  width: fit-content;
+  padding: 1px 7px;
+  border-radius: 6px;
+  background: #efe8da;
+  color: #5c4a2a;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
+/* Phones: each assignment becomes a stacked card instead of a wide table that scrolls sideways. */
+@media (max-width: 640px) {
+  .scheduleCard:global(.card) {
+    overflow-x: visible;
+  }
+
+  .table {
+    min-width: 0;
+  }
+
+  .table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+  }
+
+  .table,
+  .table tbody {
+    display: block;
+    width: 100%;
+  }
+
+  .table tr {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .table tr:last-child {
+    border-bottom: 0;
+  }
+
+  .table td {
+    display: block;
+    min-width: 0;
+    padding: 0;
+    border: 0;
+  }
+
+  .table td[colspan] {
+    grid-column: 1 / -1;
+  }
+
+  .agentTd {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .actionsTd {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .hoursTd {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+
+  .hoursEditor {
+    max-width: none;
   }
 }

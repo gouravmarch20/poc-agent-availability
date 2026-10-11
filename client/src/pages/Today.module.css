@@ -16,16 +16,6 @@
   background: #ddd4c4;
 }
 
-.badgeTone1 {
-  background: #fff0dc;
-  color: #795014;
-}
-
-.badgeTone2 {
-  background: #e9eef8;
-  color: #3d5684;
-}
-
 .facts {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;

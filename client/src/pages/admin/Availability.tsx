@@ -2,9 +2,10 @@ import { useEffect, useState } from 'react';
 import * as agentsApi from '../../services/agents';
 import * as availabilityApi from '../../services/availability';
 import { useApiRequest } from '../../hooks/useApiRequest';
-import { EmptyState, ErrorMessage, LoadingState } from '../../components/Feedback';
+import { EmptyState, LoadingState } from '../../components/Feedback';
 import { Agent, AvailabilityItem } from '../../types';
 import { Button, DateInput, Select, TimeInput } from '../../components/Controls';
+import MoreMenu from '../../components/MoreMenu';
 import styles from './Availability.module.css';
 
 function todayLocal() {
@@ -21,7 +22,7 @@ export default function Availability() {
   const [agentId, setAgentId] = useState('');
   const [startTime, setStartTime] = useState('09:00');
   const [endTime, setEndTime] = useState('18:00');
-  const { execute, error, clearError } = useApiRequest();
+  const { execute, clearError } = useApiRequest();
   const [loading, setLoading] = useState(true);
 
   async function load() {
@@ -107,21 +108,23 @@ export default function Availability() {
       </header>
       <form className="card p-[18px]" onSubmit={assign}>
         <h2 className="mb-4 text-lg">Assign agent</h2>
-        {error && <div className="mb-3"><ErrorMessage message={error} /></div>}
         <div className="grid grid-cols-1 items-end gap-3.5 md:grid-cols-2 min-[901px]:grid-cols-[minmax(220px,1.5fr)_repeat(2,minmax(130px,0.8fr))_auto]">
           <div className="field !mb-0 min-w-0">
             <label htmlFor="availability-agent">Agent</label>
             <Select
               id="availability-agent"
               value={agentId}
-              onChange={(e) => setAgentId(e.target.value)}
-            >
-              {agents.length === 0 ? (
-                <option value="">No agents available</option>
-              ) : agents.map((a) => (
-                  <option key={a.id} value={a.id}>{a.name}</option>
-                ))}
-            </Select>
+              onChange={setAgentId}
+              disabled={agents.length === 0}
+              placeholder={agents.length === 0 ? 'No agents available' : 'Choose an agent'}
+              searchPlaceholder="Search agents…"
+              options={agents.map((a) => ({
+                value: a.id,
+                label: a.name,
+                image: a.coverUrl,
+                meta: `${a.pricing.currency} ${a.pricing.amount.toLocaleString('en-IN')} · ${a.badges.slice(0, 2).join(', ')}`,
+              }))}
+            />
           </div>
           <div className="field !mb-0 min-w-0">
             <label htmlFor="availability-start-time">Start</label>
@@ -154,8 +157,20 @@ export default function Availability() {
               </tr>
             ) : items.map((item) => (
               <tr key={item.id}>
-                <td>{item.agent.name}</td>
-                <td>
+                <td className={styles.agentTd}>
+                  <div className={styles.agentCell}>
+                    {item.agent.coverUrl ? (
+                      <img className={styles.agentCover} src={item.agent.coverUrl} alt={`${item.agent.name} cover`} loading="lazy" />
+                    ) : (
+                      <span className={`${styles.agentCover} ${styles.noCover}`} aria-hidden="true">{item.agent.name.charAt(0)}</span>
+                    )}
+                    <div className={styles.agentInfo}>
+                      <span className={styles.agentName}>{item.agent.name}</span>
+                      <span className={styles.agentId} title="Agent ID">ID · {item.agent.id}</span>
+                    </div>
+                  </div>
+                </td>
+                <td className={styles.hoursTd}>
                   <div className={styles.hoursEditor}>
                     <TimeInput
                       className={styles.inlineTime}
@@ -182,10 +197,16 @@ export default function Availability() {
                     />
                   </div>
                 </td>
-                <td>
-                  <Button type="button" variant="danger" onClick={() => remove(item.id)}>
-                    Remove
-                  </Button>
+                <td className={styles.actionsTd}>
+                  <MoreMenu
+                    label={`Remove ${item.agent.name} from ${date}`}
+                    subject={item.agent.name}
+                    title="Remove"
+                    confirmText="Remove"
+                    confirmation="They will no longer be shown as available on this date. You can assign them again later."
+                    onConfirm={() => { void remove(item.id); }}
+                    buttonText="Remove"
+                  />
                 </td>
               </tr>
             ))}

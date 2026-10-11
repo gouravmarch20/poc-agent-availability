@@ -12,8 +12,9 @@ export interface CreateUserPayload {
   isActive: boolean;
 }
 
-export function listUsers(search: string, signal?: AbortSignal) {
-  return api(`/api/users?q=${encodeURIComponent(search)}`, {
+export function listUsers(search: string, signal?: AbortSignal, role?: User['role']) {
+  const roleQuery = role ? `&role=${role}` : '';
+  return api(`/api/users?q=${encodeURIComponent(search)}${roleQuery}`, {
     signal,
     responseSchema: UserListResponseSchema,
   });

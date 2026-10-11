@@ -6,6 +6,8 @@ import { EmptyState, ErrorMessage, LoadingState } from '../components/Feedback';
 import { useApiRequest } from '../hooks/useApiRequest';
 import { listAvailability, listUpcomingDates } from '../services/availability';
 import { AvailabilityItem } from '../types';
+import { routesFor } from '../routes';
+import AgentBadges from '../components/AgentBadges';
 import styles from './Today.module.css';
 
 function shiftDate(date: string, amount: number): string {
@@ -22,6 +24,7 @@ function shortDate(date: string): string {
 export default function Today() {
   const { user } = useAuth();
   const isCustomer = user?.role === 'customer';
+  const routes = routesFor(user?.role ?? 'customer');
   const [dates, setDates] = useState<string[]>([]);
   const [selected, setSelected] = useState('');
   const [items, setItems] = useState<AvailabilityItem[]>([]);
@@ -31,12 +34,12 @@ export default function Today() {
     execute: loadUpcoming,
     error: upcomingError,
     clearError: clearUpcomingError,
-  } = useApiRequest();
+  } = useApiRequest({ silent: true });
   const {
     execute: loadAvailability,
     error: availabilityError,
     clearError: clearAvailabilityError,
-  } = useApiRequest();
+  } = useApiRequest({ silent: true });
   const error = upcomingError || availabilityError;
 
   useEffect(() => {
@@ -102,20 +105,14 @@ export default function Today() {
         {itemsLoading ? <LoadingState label="Loading availability..." /> : items.length === 0 ? (
           <EmptyState message="No agents assigned for this date." />
         ) : items.map((item) => (
-          <Link key={item.id} className={`card ${styles.agentCard}`} to={`/agents/${item.agent.id}?date=${selected}`}>
+          <Link key={item.id} className={`card ${styles.agentCard}`} to={`${routes.viewAgent(item.agent.id)}?date=${selected}`}>
             {item.agent.coverUrl ? (
               <img src={item.agent.coverUrl} alt={item.agent.name} />
             ) : (
               <div className="placeholder" />
             )}
             <h3>{item.agent.name}</h3>
-            <div className="badges">
-              {item.agent.badges.map((badge, index) => (
-                <span key={badge} className={`badge ${index % 3 === 1 ? styles.badgeTone1 : index % 3 === 2 ? styles.badgeTone2 : ''}`}>
-                  {badge}
-                </span>
-              ))}
-            </div>
+            <AgentBadges badges={item.agent.badges} />
             <div className={styles.facts}>
               <p className={styles.time}>
                 <span>Available</span>

@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import App from './App';
 import { AuthProvider } from './auth';
+import AppToaster from './components/AppToaster';
 import './styles.css';
 
 const container = document.getElementById('root');
@@ -13,6 +14,7 @@ ReactDOM.createRoot(container).render(
     <BrowserRouter>
       <AuthProvider>
         <App />
+        <AppToaster />
       </AuthProvider>
     </BrowserRouter>
   </React.StrictMode>
