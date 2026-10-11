@@ -6,6 +6,7 @@ import { Agent } from '../../types';
 import { ApiError } from '../../api';
 import MoreMenu from '../../components/MoreMenu';
 import AgentBadges from '../../components/AgentBadges';
+import { ACTION_TOAST_MS, notifySuccess } from '../../lib/notify';
 import { Button, Input, Textarea } from '../../components/Controls';
 import styles from './Agents.module.css';
 
@@ -243,11 +244,14 @@ export default function Agents() {
     if (Object.keys(localErrors).length > 0) return;
 
     try {
+      const agentName = form.name.trim();
       if (editing && editingAgent) {
         await execute(() => agentsApi.updateAgent(editing, payload()));
         if (photosDirty) await savePhotoDraft(editing, editingAgent);
+        notifySuccess('Agent updated', { description: agentName, id: 'agent-saved', duration: ACTION_TOAST_MS });
       } else {
         await execute(() => agentsApi.createAgent(payload(), newPhotos.map((photo) => photo.file)));
+        notifySuccess('Agent created', { description: agentName, id: 'agent-saved', duration: ACTION_TOAST_MS });
       }
       clearNewPhotos();
       setForm(empty);
@@ -281,6 +285,7 @@ export default function Agents() {
     setDeletingAgentId(agent.id);
     try {
       await execute(() => agentsApi.deleteAgent(agent.id));
+      notifySuccess('Agent deleted', { description: agent.name, id: 'agent-deleted', duration: ACTION_TOAST_MS });
       if (editing === agent.id) {
         setEditing(null);
         clearNewPhotos();

@@ -6,6 +6,7 @@ import { useApiRequest } from '../../hooks/useApiRequest';
 import { Button, Input, Textarea } from '../../components/Controls';
 import { ErrorMessage, LoadingState } from '../../components/Feedback';
 import AgentBadges from '../../components/AgentBadges';
+import DemoTip from '../../components/DemoTip';
 import { notifySuccess } from '../../lib/notify';
 import { Agent } from '../../types';
 import styles from './MyProfile.module.css';
@@ -103,6 +104,7 @@ export default function MyProfile() {
 
   return (
     <div className={styles.page}>
+      <DemoTip role="agent" />
       <header>
         <h1 className={styles.title}>My profile</h1>
         <p className="meta" style={{ margin: '4px 0 0' }}>This is how customers see you. You can update your name, phone and bio.</p>

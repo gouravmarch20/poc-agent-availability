@@ -6,6 +6,7 @@ import { User } from '../../types';
 import { CreateUserPayload } from '../../services/users';
 import { Button, DateInput, Input } from '../../components/Controls';
 import MoreMenu from '../../components/MoreMenu';
+import { ACTION_TOAST_MS, notifySuccess } from '../../lib/notify';
 import styles from './Users.module.css';
 
 type StatusFilter = 'all' | 'active' | 'disabled';
@@ -39,7 +40,6 @@ export default function Users() {
   const [q, setQ] = useState('');
   const [filter, setFilter] = useState<StatusFilter>('all');
   const [form, setForm] = useState(empty);
-  const [notice, setNotice] = useState('');
   const { execute } = useApiRequest();
   const [loading, setLoading] = useState(true);
 
@@ -81,21 +81,25 @@ export default function Users() {
     event.preventDefault();
     try {
       await execute(() => usersApi.createUser({ ...form, role: 'customer' }));
-      setNotice(`Created ${form.name}`);
+      notifySuccess('Customer created', { description: form.name, id: 'customer-saved', duration: ACTION_TOAST_MS });
       setForm(empty);
       await refresh();
     } catch {
-      setNotice('');
+      /* the request hook shows the error as a toast */
     }
   }
 
   async function toggle(customer: User) {
     try {
       await execute(() => usersApi.setUserActive(customer.id, !customer.isActive));
-      setNotice('');
+      notifySuccess(customer.isActive ? 'Customer disabled' : 'Customer restored', {
+        description: customer.name,
+        id: 'customer-status',
+        duration: ACTION_TOAST_MS,
+      });
       await refresh();
     } catch {
-      /* the request error is shown above the page */
+      /* the request hook shows the error as a toast */
     }
   }
 
@@ -110,7 +114,7 @@ export default function Users() {
         <h2 className="mb-3.5 text-base">New customer</h2>
         <div className="grid grid-cols-1 items-end gap-3 md:grid-cols-2 min-[901px]:grid-cols-3">
           <div className="field !mb-0 min-w-0">
-            <Input label="Name" value={form.name} onChange={(e) => { setNotice(''); setForm({ ...form, name: e.target.value }); }} required />
+            <Input label="Name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
           </div>
           <div className="field !mb-0 min-w-0">
             <Input label="Email" type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} required />
@@ -133,7 +137,6 @@ export default function Users() {
           </div>
           <Button className="min-h-11 justify-self-start whitespace-nowrap max-[600px]:w-full" type="submit">Create customer</Button>
         </div>
-        {notice && <p className={styles.notice} role="status">✓ {notice}</p>}
       </form>
 
       <section className="card min-w-0 p-[18px]" aria-labelledby="users-list-heading">

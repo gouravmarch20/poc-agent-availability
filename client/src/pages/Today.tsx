@@ -8,6 +8,7 @@ import { listAvailability, listUpcomingDates } from '../services/availability';
 import { AvailabilityItem } from '../types';
 import { routesFor } from '../routes';
 import AgentBadges from '../components/AgentBadges';
+import DemoTip from '../components/DemoTip';
 import styles from './Today.module.css';
 
 function shiftDate(date: string, amount: number): string {
@@ -74,6 +75,7 @@ export default function Today() {
 
   return (
     <div>
+      {isCustomer && <DemoTip role="customer" />}
       <h1>Available agents</h1>
       <p className="meta">Times are in Asia/Kolkata. Tap a date to see who is on duty.</p>
       {error && <ErrorMessage message={error} />}

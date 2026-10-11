@@ -104,13 +104,6 @@
   background: rgba(255, 255, 255, 0.22);
 }
 
-.notice {
-  margin: 12px 0 0;
-  color: #23613f;
-  font-size: 0.9rem;
-  font-weight: 600;
-}
-
 .tableActions {
   flex-wrap: nowrap;
   gap: 6px;

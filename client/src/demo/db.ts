@@ -33,8 +33,8 @@ export function saveDb(): void {
 export function resetDemo(): void {
   memory = null;
   try {
-    sessionStorage.removeItem(DB_KEY);
-    sessionStorage.removeItem(SESSION_KEY);
+    // Clears the data, the signed-in session and the dismissed welcome tips.
+    Object.keys(sessionStorage).filter((key) => key.startsWith('demo:')).forEach((key) => sessionStorage.removeItem(key));
   } catch {
     /* ignore */
   }

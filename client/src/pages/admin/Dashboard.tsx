@@ -7,6 +7,7 @@ import { listUsers } from '../../services/users';
 import { useApiRequest } from '../../hooks/useApiRequest';
 import { ErrorMessage, LoadingState } from '../../components/Feedback';
 import { AnalyticsSummary } from '../../types';
+import DemoTip from '../../components/DemoTip';
 import styles from './Dashboard.module.css';
 
 export default function Dashboard() {
@@ -46,6 +47,7 @@ export default function Dashboard() {
 
   return (
     <div>
+      <DemoTip role="admin" />
       <h1>Admin dashboard</h1>
       <p className="meta">Choose a section to manage.</p>
       <div className={styles.grid}>

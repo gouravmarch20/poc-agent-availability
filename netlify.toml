@@ -1,0 +1,14 @@
+# Frontend-only demo: builds the client with the in-browser mock API (VITE_DEMO_MODE) and serves it as a static site.
+[build]
+  base = "client"
+  command = "npm run build:demo"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "20"
+
+# Single-page app: send every path to index.html so /admin/... and /customer/... work on refresh.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

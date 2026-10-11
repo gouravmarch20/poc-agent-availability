@@ -8,6 +8,8 @@ import styles from './Layout.module.css';
 import { routesFor } from './routes';
 
 
+const DEMO_MODE = import.meta.env.VITE_DEMO_MODE === 'true';
+
 export default function Layout() {
   const { user, logout, isStaff } = useAuth();
   const location = useLocation();
@@ -111,7 +113,7 @@ export default function Layout() {
           <div className={styles.navAccount}>
             {isStaff && <span className={styles.userName}>{user?.name}</span>}
             <Button className={styles.logout} type="button" onClick={() => { closeMenu(); void logout(); }}>
-              Log out
+              {DEMO_MODE ? 'Switch role' : 'Log out'}
             </Button>
           </div>
         </nav>

@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { API_UNAUTHORIZED_EVENT } from './api';
 import * as authApi from './services/auth';
 import { User, AuthContextType } from './types';
-import { notifyError } from './lib/notify';
+import { notifyError, notifySuccess } from './lib/notify';
 
 const AuthContext = createContext<AuthContextType | null>(null);
 const IDLE_MS = 15 * 60 * 1000;
@@ -82,6 +82,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
           await authApi.logout();
         } finally {
           setUser(null);
+          notifySuccess("You've been logged out", {
+            description: import.meta.env.VITE_DEMO_MODE === 'true' ? 'Pick another role to keep exploring.' : 'See you again soon.',
+            id: 'logout-success',
+          });
         }
       },
     }),

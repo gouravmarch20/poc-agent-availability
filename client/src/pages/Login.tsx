@@ -3,18 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth';
 import { Button, Input } from '../components/Controls';
 import { ApiError } from '../api';
-import { notifyError } from '../lib/notify';
+import { notifyError, notifySuccess } from '../lib/notify';
 import { routesFor } from '../routes';
-import { DEMO_ACCOUNTS } from '../demo/seed';
+import DemoRolePicker from './DemoRolePicker';
+import type { DEMO_ACCOUNTS } from '../demo/seed';
 
 const DEMO_MODE = import.meta.env.VITE_DEMO_MODE === 'true';
-
-// Dark text on a light tint of each role colour keeps the role icons readable.
-const DEMO_TONES = {
-  admin: 'bg-[#fff0dc] text-[#6b4510]',
-  agent: 'bg-[#dff1e8] text-[#145b43]',
-  customer: 'bg-[#e1ecfa] text-[#1e4a85]',
-} as const;
 
 const COPY = {
   brand: 'Agent Availability',
@@ -32,9 +26,9 @@ const COPY = {
 };
 
 const CLASSES = {
-  page: 'flex min-h-screen items-center justify-center bg-[#f6f8f6] px-5 py-8 text-ink',
+  page: 'flex min-h-dvh items-start justify-center bg-[#f6f8f6] px-4 py-6 text-ink sm:items-center sm:px-5 sm:py-8',
   form: 'signin-content w-full max-w-sm',
-  brand: 'mb-8 flex items-center gap-3',
+  brand: 'mb-6 flex items-center gap-3 sm:mb-8',
   brandMark: 'grid size-10 place-items-center rounded-lg bg-[#163f3a] font-serif text-xl font-bold text-white',
   label: 'mb-2 block text-sm font-medium text-ink',
   input: 'w-full rounded-lg border border-line bg-white px-4 py-3 text-base text-ink outline-none transition focus:border-brand focus:ring-2 focus:ring-brand/20',
@@ -50,6 +44,7 @@ export default function Login() {
   const [error, setError] = useState<string>('');
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [quickRole, setQuickRole] = useState<string | null>(null);
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -81,13 +76,33 @@ export default function Login() {
     }
   }
 
-  return (
-    <main className={CLASSES.page}>
+  // One tap on a demo card signs in straight away and confirms who you are with a toast.
+  async function quickLogin(account: (typeof DEMO_ACCOUNTS)[number]) {
+    if (isSubmitting) return;
+    setError('');
+    setEmail(account.email);
+    setPassword(account.password);
+    setIsSubmitting(true);
+    setQuickRole(account.label);
+    try {
+      const user = await login(account.email, account.password);
+      notifySuccess(`You're logged in as ${account.label}`, { description: `Welcome, ${user.name}`, id: 'login-success' });
+      navigate(routesFor(user.role).home, { replace: true });
+    } catch (err) {
+      notifyError(err instanceof ApiError ? err.message : 'Login failed', { id: 'login-error' });
+      setIsSubmitting(false);
+      setQuickRole(null);
+    }
+  }
+
+  const emailForm = (
       <form className={CLASSES.form} onSubmit={onSubmit} autoComplete="on">
-        <div className={CLASSES.brand}>
-          <span className={CLASSES.brandMark}>A</span>
-          <span className="text-sm font-semibold">{COPY.brand}</span>
-        </div>
+        {!DEMO_MODE && (
+          <div className={CLASSES.brand}>
+            <span className={CLASSES.brandMark}>A</span>
+            <span className="text-sm font-semibold">{COPY.brand}</span>
+          </div>
+        )}
 
         <h1 className="font-serif text-3xl leading-tight">{COPY.heading}</h1>
         <p className="mt-2 text-sm leading-6 text-muted">{COPY.message}</p>
@@ -144,40 +159,12 @@ export default function Login() {
         <Button className={CLASSES.submit} type="submit" disabled={isSubmitting}>
           {isSubmitting ? COPY.submitting : COPY.submit}
         </Button>
-        {DEMO_MODE ? (
-          <section className="mt-6 rounded-2xl border border-line bg-white p-4" aria-labelledby="demo-accounts-heading">
-            <h2 id="demo-accounts-heading" className="text-sm font-bold text-ink">Try a demo account</h2>
-            <p className="mt-1 text-sm text-[#3b4a43]">Tap a role to fill the form, then press Sign in.</p>
-            <div className="mt-3 grid gap-2">
-              {DEMO_ACCOUNTS.map((account) => {
-                const selected = email.trim().toLowerCase() === account.email && password === account.password;
-                return (
-                  <button
-                    key={account.email}
-                    type="button"
-                    aria-pressed={selected}
-                    className={`flex min-h-[64px] items-center gap-3 rounded-xl border-2 px-3 py-2.5 text-left transition focus:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 ${selected ? 'border-brand bg-[#eaf6f0]' : 'border-line bg-white hover:border-brand'}`}
-                    onClick={() => { setEmail(account.email); setPassword(account.password); }}
-                  >
-                    <span className={`grid size-10 shrink-0 place-items-center rounded-full text-base font-bold ${DEMO_TONES[account.tone]}`} aria-hidden="true">
-                      {account.label.charAt(0)}
-                    </span>
-                    <span className="min-w-0 flex-1">
-                      <span className="block text-[0.95rem] font-bold text-ink">{account.label}</span>
-                      <span className="block text-[0.82rem] leading-snug text-[#3b4a43]">{account.description}</span>
-                      <span className="mt-1 block truncate font-mono text-[0.78rem] text-ink">{account.email} · {account.password}</span>
-                    </span>
-                    <span className={`shrink-0 text-lg font-bold ${selected ? 'text-brand' : 'text-transparent'}`} aria-hidden="true">✓</span>
-                  </button>
-                );
-              })}
-            </div>
-            <p className="mt-3 text-xs text-[#3b4a43]">Demo only: changes live in this browser tab and reset when it closes.</p>
-          </section>
-        ) : (
-          <p className="mt-4 text-center text-xs leading-5 text-muted">{COPY.policy}</p>
-        )}
+        {!DEMO_MODE && <p className="mt-4 text-center text-xs leading-5 text-muted">{COPY.policy}</p>}
       </form>
-    </main>
   );
+
+  // Client demo: just a "who's exploring?" role picker.
+  if (DEMO_MODE) return <DemoRolePicker onPick={(account) => { void quickLogin(account); }} pickingLabel={quickRole} />;
+
+  return <main className={CLASSES.page}>{emailForm}</main>;
 }

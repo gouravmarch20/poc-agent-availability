@@ -183,7 +183,28 @@ export function buildSeed(): DemoDb {
 }
 
 export const DEMO_ACCOUNTS = [
-  { tone: 'admin', label: 'Admin', description: 'Manage agents, availability and customers', email: 'admin@local.test', password: 'Admin@123' },
-  { tone: 'agent', label: 'Agent', description: 'Edit your profile and see other agents', email: 'agent.priya@local.test', password: 'Agent@123' },
-  { tone: 'customer', label: 'Customer', description: 'Browse agents and their availability', email: 'customer@local.test', password: 'Customer@123' },
+  {
+    tone: 'admin',
+    label: 'Admin',
+    tagline: 'The business owner',
+    description: 'Add agents, choose who is available each day and manage customers.',
+    email: 'admin@local.test',
+    password: 'Admin@123',
+  },
+  {
+    tone: 'agent',
+    label: 'Agent',
+    tagline: 'A service provider',
+    description: 'See and edit your own profile, and look at the other agents.',
+    email: 'agent.priya@local.test',
+    password: 'Agent@123',
+  },
+  {
+    tone: 'customer',
+    label: 'Customer',
+    tagline: 'A client looking to book',
+    description: 'Pick a day and browse the agents who are available.',
+    email: 'customer@local.test',
+    password: 'Customer@123',
+  },
 ] as const;
